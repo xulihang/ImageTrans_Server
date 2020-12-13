@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Upload</title>
+<style type="text/css">
+.ta {width: 300px;
+height: 350px;}
+</style>
+</head>
+<body>
+<form action="/translate" method="post" enctype="multipart/form-data" id="uploadform">
+ Choose Image: <input type="file" name="image" />
+ <p>Detect Only: <input type="checkbox" name="detectonly"></p>
+  <p>Return Type(json, img, html):<input type="text" name="returntype" value="html"></p>
+  <input type="submit" value="Upload" />
+</form>
+<textarea class="ta" name="config" form="uploadform">
+{
+    "auto_clean": true,
+    "otsu_enabled": false,
+    "mtengine": "tencent",
+    "remove_space": false,
+    "minimumHeight": 3,
+    "addBorder": false,
+    "reorder": false,
+    "threshold": 200,
+    "use_puretext": false,
+    "source": "en",
+    "minimumHSpan": 15,
+    "target": "zh",
+    "ocrlang": "ENG",
+    "precision_mode": true,
+    "maximumHeight": 200,
+    "chinese_punctuation": false,
+    "ocrengine": "baidu",
+    "autoThreshold": true,
+    "minimumVSpan": 15
+}</textarea> 
+</body>
+</html>
