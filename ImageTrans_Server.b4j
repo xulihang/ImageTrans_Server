@@ -1,0 +1,47 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.example
+Group=Default Group
+Library1=jcore
+Library2=jserver
+Library3=jshell
+Library4=byteconverter
+Library5=encryption
+Module1=Hello
+Module2=Translate
+NumberOfFiles=0
+NumberOfLibraries=5
+NumberOfModules=2
+Version=7.8
+@EndOfDesignText@
+'Non-UI application (console / server application)
+#Region Project Attributes 
+	#CommandLineArgs:
+	#MergeLibraries: True 
+#End Region
+
+Sub Process_Globals
+	Private srvr As Server
+	Public tempDir As String
+End Sub
+
+Sub AppStart (Args() As String)
+	Dim port As Int=51041
+	If Args.Length>0 Then
+		port=Args(0)
+	End If
+	tempDir=File.Combine(File.Combine(File.DirApp,"www"),"temp")
+	If File.Exists(tempDir,"")=False Then
+		File.MakeDir(tempDir,"")
+	End If
+	srvr.Initialize("srvr")
+	srvr.AddHandler("/hello","Hello",False)
+	srvr.AddHandler("/translate","Translate",False)
+	srvr.Port=port
+	srvr.Start
+	StartMessageLoop
+End Sub
+
+'Return true to allow the default exceptions handler to handle the uncaught exception.
+Sub Application_Error (Error As Exception, StackTrace As String) As Boolean
+	Return True
+End Sub
