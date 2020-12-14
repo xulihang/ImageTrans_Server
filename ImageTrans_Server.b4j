@@ -23,6 +23,8 @@ Sub Process_Globals
 	Private srvr As Server
 	Public tempDir As String
 	Public Running As Boolean=False
+	Public shs As List
+	Private Timer1 As Timer
 End Sub
 
 Sub AppStart (Args() As String)
@@ -30,6 +32,9 @@ Sub AppStart (Args() As String)
 	If Args.Length>0 Then
 		port=Args(0)
 	End If
+	shs.Initialize
+	Timer1.Initialize("Timer1",60*60*1000)
+    Timer1.Enabled=True
 	tempDir=File.Combine(File.Combine(File.DirApp,"www"),"temp")
 	If File.Exists(tempDir,"")=False Then
 		File.MakeDir(tempDir,"")
@@ -45,4 +50,16 @@ End Sub
 'Return true to allow the default exceptions handler to handle the uncaught exception.
 Sub Application_Error (Error As Exception, StackTrace As String) As Boolean
 	Return True
+End Sub
+
+Sub Timer1_Tick
+	For Each sh As Shell In shs
+		Try
+			sh.KillProcess
+		Catch
+			Log(LastException)
+		End Try
+	Next
+	shs.Clear
+	Running=False
 End Sub

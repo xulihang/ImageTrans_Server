@@ -12,6 +12,7 @@ height: 350px;}
 <form action="/translate" method="post" enctype="multipart/form-data" id="uploadform">
  Choose Image: <input type="file" name="image" />
  <p>Detect Only: <input type="checkbox" name="detectonly"></p>
+ <p>Use Previous Data: <input type="checkbox" name="useprevious" checked></p>
   <p>Return Type(json, img, html):<input type="text" name="returntype" value="html"></p>
   <input type="submit" value="Upload" />
 </form>

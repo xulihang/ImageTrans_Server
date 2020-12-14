@@ -7,6 +7,6 @@ ModuleBreakpoints2=
 ModuleClosedNodes0=1
 ModuleClosedNodes1=
 ModuleClosedNodes2=
-NavigationStack=Translate,MD5,82,0,Translate,WriteFileList,45,3,Hello,Handle,11,6,Translate,Initialize,5,0,Main,AppStart,22,6,Translate,Class_Globals,2,0,Translate,Handle,42,6,Main,Process_Globals,11,6,Translate,WriteConfigFile,52,6,Translate,Run,91,6
+NavigationStack=Hello,Handle,11,6,Translate,Initialize,5,0,Translate,WriteConfigFile,52,6,Translate,Class_Globals,2,6,Main,Application_Error,38,0,Translate,Handle,35,6,Translate,Run,106,6,Main,Process_Globals,13,6,Main,Timer1_Tick,45,6,Main,AppStart,21,6
 SelectedBuild=0
 VisibleModules=1,2

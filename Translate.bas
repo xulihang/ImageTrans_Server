@@ -37,6 +37,21 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 				detectOnly="false"
 			End If
 		End If
+		Dim usePrevious As String
+		If detectOnly="true" Then
+			usePrevious="false"
+		Else
+			usePrevious="true"
+		End If
+		If parts.ContainsKey("useprevious") Then
+			Dim usepreviouspart As Part = parts.Get("useprevious")
+			'Log("useprevious:"&usepreviouspart.GetValue(req.CharacterEncoding))
+			If usepreviouspart.GetValue(req.CharacterEncoding)="on" Then
+				usePrevious="true"
+			Else
+				usePrevious="false"
+			End If
+		End If
 		Dim returntype As String
 		Dim returntypePart As Part=parts.Get("returntype")
 		returntype=returntypePart.GetValue(req.CharacterEncoding)
@@ -46,7 +61,7 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		Log(filepart.SubmittedFilename)
 		Dim configPath As String=WriteConfigFile(config,hash)
 		Dim fileListPath As String=WriteFileList(File.Combine(uploadedPath,filepart.SubmittedFilename))
-		Run(resp,configPath,fileListPath,detectOnly,hash,returntype)
+		Run(resp,configPath,fileListPath,usePrevious,detectOnly,hash,returntype)
 		StartMessageLoop '<---
 	Else
 		resp.Write("wrong")
@@ -65,15 +80,15 @@ Sub WriteFileList(filename As String) As String
 	Return path
 End Sub
 
-Sub Run(resp As ServletResponse,configPath As String,fileListPath As String,detectOnly As String,hash As String,returntype As String)
+Sub Run(resp As ServletResponse,configPath As String,fileListPath As String,usePrevious As String,detectOnly As String,hash As String,returntype As String)
 	' .\config.json true true .\temp2\ .\fileList.txt
 	Try
-		
 		Dim sh As Shell
-		sh.Initialize("sh","java",Array As String("-jar","ImageTrans.jar",configPath,"true",detectOnly,Main.tempDir,fileListPath))
+		sh.Initialize("sh","java",Array As String("-jar","ImageTrans.jar",configPath,usePrevious,detectOnly,Main.tempDir,fileListPath))
 		sh.WorkingDirectory=File.DirApp
 		sh.Encoding=GetSystemProperty("file.encoding","UTF8")
 		sh.run(1000000)
+		Main.shs.Add(sh)
 		Main.Running=True
 		wait for sh_ProcessCompleted (Success As Boolean, ExitCode As Int, StdOut As String, StdErr As String)
 		If Success And ExitCode = 0 Then
