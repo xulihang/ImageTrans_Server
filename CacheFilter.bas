@@ -19,7 +19,8 @@ Public Sub Filter(req As ServletRequest, resp As ServletResponse) As Boolean
 	' File.Combine(File.DirApp, "www") is just for example purposes. Replace this with your StaticFilesFolder (StaticFilesFolder property from your server object)
 	If File.Exists(File.Combine(File.DirApp, "www"), req.RequestURI) Then
 		' if the request was made for myfile.ext then we set response header to disable caching for this file
-		If File.GetName(req.RequestURI).Contains(".jpg") Then
+		Dim name As String=File.GetName(req.RequestURI)
+		If name.Contains(".jpg") Or name.Contains("upload.html")  Then
 			resp.SetHeader("Cache-Control", "no-cache, no-store") ' disables cache for HTTP 1.1
 			resp.SetHeader("Pragma", "no-cache") ' disables cache for HTTP 1.0
 			resp.SetHeader("Expires", "0") ' disables cache for Proxies

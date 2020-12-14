@@ -115,6 +115,8 @@ Sub Run(resp As ServletResponse,configPath As String,fileListPath As String,useP
 			End If
 		Else
 			Log(StdOut)
+			resp.Write(StdErr)
+			resp.Write(StdOut)
 		End If
 	Catch
 		Log(LastException)

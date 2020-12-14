@@ -7,6 +7,48 @@
 .ta {width: 300px;
 height: 350px;}
 </style>
+<script type="text/javascript">
+
+function update(){
+    var ta=document.getElementById("params");
+    var params=JSON.parse(ta.value);
+	var colorType=getSelectedRadio("colortype");
+	var imageType=getSelectedRadio("imagetype");
+	if (colorType=="blackwhite"){
+	    params["otsu_enabled"]=false;
+	}else{
+	    params["otsu_enabled"]=true;
+	}
+	if (imageType=="normal"){
+	    params["useOCR"]=false;
+		params["ocrengine"]="baidu";
+		params["ocrlang"]="CHN_ENG";
+	}else if (imageType=="print"){
+	    params["useOCR"]=true;
+		params["ocrengine"]="tesseract";
+		params["ocrlang"]="chi_sim+eng";
+	}else if (imageType=="complex"){
+	    params["useOCR"]=true;
+	    params["ocrengine"]="google";
+	    params["ocrlang"]="auto";
+	}
+    var result = JSON.stringify(params,null,4);
+	ta.value=result;
+    //alert(getSelectedRadio("colortype"));
+	//alert(getSelectedRadio("imagetype"));
+}
+
+function getSelectedRadio(name){
+    var radios=document.getElementsByName(name)
+    for (i = 0; i < radios.length; i++) { 
+	    var r=radios[i];
+		if (r.checked==true){
+		    return r.value;
+		}
+    }
+}
+
+</script>  
 </head>
 <body>
 <form action="/translate" method="post" enctype="multipart/form-data" id="uploadform">
@@ -16,7 +58,23 @@ height: 350px;}
   <p>Return Type(json, img, html):<input type="text" name="returntype" value="html"></p>
   <input type="submit" value="Upload" />
 </form>
-<textarea class="ta" name="config" form="uploadform">
+<div>
+<div id="colortyperadios">
+<p>Color type:</p>
+<p><input type="radio" name="colortype" value="blackwhite" checked>Black/White</p>
+<p><input type="radio" name="colortype" value="color">Color</p>
+</div>
+
+<div id="imagetyperadio">
+<p>Image type:</p>
+<p><input type="radio" name="imagetype" value="normal" checked>Normal (e.g. comic)</p>
+<p><input type="radio" name="imagetype" value="print">Print</p>
+<p><input type="radio" name="imagetype" value="complex">Complex images</p>
+</div>
+<button type="button" onclick="update()">Update params</button>
+</div>
+
+<textarea id="params" class="ta" name="config" form="uploadform">
 {
     "auto_clean": true,
     "otsu_enabled": true,
@@ -41,5 +99,6 @@ height: 350px;}
     "autoThreshold": true,
     "minimumVSpan": 15
 }</textarea> 
+
 </body>
 </html>
