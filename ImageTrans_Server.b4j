@@ -8,9 +8,10 @@ Library4=byteconverter
 Library5=encryption
 Module1=Hello
 Module2=Translate
+Module3=CacheFilter
 NumberOfFiles=0
 NumberOfLibraries=5
-NumberOfModules=2
+NumberOfModules=3
 Version=7.8
 @EndOfDesignText@
 'Non-UI application (console / server application)
@@ -42,6 +43,7 @@ Sub AppStart (Args() As String)
 	srvr.Initialize("srvr")
 	srvr.AddHandler("/hello","Hello",False)
 	srvr.AddHandler("/translate","Translate",False)
+	srvr.AddFilter("/*", "CacheFilter", False)
 	srvr.Port=port
 	srvr.Start
 	StartMessageLoop

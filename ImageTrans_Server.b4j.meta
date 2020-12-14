@@ -1,12 +1,15 @@
 ﻿ModuleBookmarks0=
 ModuleBookmarks1=
 ModuleBookmarks2=
+ModuleBookmarks3=
 ModuleBreakpoints0=
 ModuleBreakpoints1=
 ModuleBreakpoints2=
+ModuleBreakpoints3=
 ModuleClosedNodes0=1
 ModuleClosedNodes1=
 ModuleClosedNodes2=
-NavigationStack=Hello,Handle,11,6,Translate,Initialize,5,0,Translate,WriteConfigFile,52,6,Translate,Class_Globals,2,6,Main,Application_Error,38,0,Translate,Handle,35,6,Translate,Run,106,6,Main,Process_Globals,13,6,Main,Timer1_Tick,45,6,Main,AppStart,21,6
+ModuleClosedNodes3=
+NavigationStack=Translate,Initialize,5,0,Translate,WriteConfigFile,52,6,Translate,Class_Globals,2,6,Main,Application_Error,38,0,Main,Process_Globals,13,6,Main,Timer1_Tick,45,6,Main,AppStart,29,6,CacheFilter,Filter,15,5,Translate,Run,106,6,Translate,Handle,32,6
 SelectedBuild=0
-VisibleModules=1,2
+VisibleModules=1,2,3

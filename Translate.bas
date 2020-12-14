@@ -38,11 +38,6 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 			End If
 		End If
 		Dim usePrevious As String
-		If detectOnly="true" Then
-			usePrevious="false"
-		Else
-			usePrevious="true"
-		End If
 		If parts.ContainsKey("useprevious") Then
 			Dim usepreviouspart As Part = parts.Get("useprevious")
 			'Log("useprevious:"&usepreviouspart.GetValue(req.CharacterEncoding))
@@ -51,7 +46,14 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 			Else
 				usePrevious="false"
 			End If
+		Else
+			usePrevious="false"
 		End If
+		If detectOnly="true" Then
+			usePrevious="false"
+		End If
+		Log("detect only:"&detectOnly)
+		Log("usePrevious:"&usePrevious)
 		Dim returntype As String
 		Dim returntypePart As Part=parts.Get("returntype")
 		returntype=returntypePart.GetValue(req.CharacterEncoding)
