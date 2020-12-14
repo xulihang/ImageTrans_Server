@@ -22,6 +22,7 @@ Version=7.8
 Sub Process_Globals
 	Private srvr As Server
 	Public tempDir As String
+	Public Running As Boolean=False
 End Sub
 
 Sub AppStart (Args() As String)

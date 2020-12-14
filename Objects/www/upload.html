@@ -18,7 +18,7 @@ height: 350px;}
 <textarea class="ta" name="config" form="uploadform">
 {
     "auto_clean": true,
-    "otsu_enabled": false,
+    "otsu_enabled": true,
     "mtengine": "tencent",
     "remove_space": false,
     "minimumHeight": 3,
@@ -26,13 +26,16 @@ height: 350px;}
     "reorder": false,
     "threshold": 200,
     "use_puretext": false,
-    "source": "en",
+    "source": "zh",
     "minimumHSpan": 15,
-    "target": "zh",
-    "ocrlang": "ENG",
+    "target": "en",
+    "ocrlang": "CHN_ENG",
+    "mt_interval": 200,
     "precision_mode": true,
+    "ocr_interval": 200,
     "maximumHeight": 200,
     "chinese_punctuation": false,
+    "useOCR": false,
     "ocrengine": "baidu",
     "autoThreshold": true,
     "minimumVSpan": 15

@@ -14,6 +14,10 @@ Public Sub Initialize
 End Sub
 
 Sub Handle(req As ServletRequest, resp As ServletResponse)
+	If Main.Running Then
+		resp.Write("An instance is running. Please wait.")
+		Return
+	End If
 	If req.ContentType.StartsWith("multipart/form-data") Then
 		Dim uploadedPath As String=File.Combine(File.DirApp,"uploaded")
 		If File.Exists(uploadedPath,"")=False Then
@@ -40,7 +44,7 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		File.Copy(filepart.TempFile,"",uploadedPath,filepart.SubmittedFilename)
 		File.Delete(filepart.TempFile,"")
 		Log(filepart.SubmittedFilename)
-		Dim configPath As String=WriteConfigFile(config)
+		Dim configPath As String=WriteConfigFile(config,hash)
 		Dim fileListPath As String=WriteFileList(File.Combine(uploadedPath,filepart.SubmittedFilename))
 		Run(resp,configPath,fileListPath,detectOnly,hash,returntype)
 		StartMessageLoop '<---
@@ -49,8 +53,8 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 	End If
 End Sub
 
-Sub WriteConfigFile(config As String) As String
-	Dim path As String=File.Combine(Main.tempDir,DateTime.Now&".json")
+Sub WriteConfigFile(config As String,hash As String) As String
+	Dim path As String=File.Combine(Main.tempDir,hash&".json")
 	File.WriteString(path,"",config)
 	Return path
 End Sub
@@ -70,6 +74,7 @@ Sub Run(resp As ServletResponse,configPath As String,fileListPath As String,dete
 		sh.WorkingDirectory=File.DirApp
 		sh.Encoding=GetSystemProperty("file.encoding","UTF8")
 		sh.run(1000000)
+		Main.Running=True
 		wait for sh_ProcessCompleted (Success As Boolean, ExitCode As Int, StdOut As String, StdErr As String)
 		If Success And ExitCode = 0 Then
 			Log("Success")
@@ -85,8 +90,12 @@ Sub Run(resp As ServletResponse,configPath As String,fileListPath As String,dete
 			Else if returntype="html" Then
 				resp.ContentType="text/html"
 				resp.Write($"<img src="/temp/${hash}/image.jpg-output.jpg"  alt="result" />"$)
+			else if returntype="img" Then
+				Dim img() As Byte = File.ReadBytes(File.Combine(Main.tempDir,hash),"image.jpg-output.jpg")
+				Dim In As InputStream
+				In.InitializeFromBytesArray(img, 0, img.Length)
+				File.Copy2(In, resp.OutputStream)
 			End If
-
 		Else
 			Log(StdOut)
 		End If
@@ -94,6 +103,7 @@ Sub Run(resp As ServletResponse,configPath As String,fileListPath As String,dete
 		Log(LastException)
 		resp.Write(LastException.Message)
 	End Try
+	Main.Running=False
 	StopMessageLoop
 End Sub
 
