@@ -60,6 +60,10 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		Dim hash As String=MD5(filepart.TempFile,"")
 		File.Copy(filepart.TempFile,"",uploadedPath,filepart.SubmittedFilename)
 		File.Delete(filepart.TempFile,"")
+		If isSupported(filepart.SubmittedFilename.ToLowerCase)=False Then
+			resp.Write("Only bmp, jpg and png are supported.")
+			Return
+		End If
 		Log(filepart.SubmittedFilename)
 		Dim configPath As String=WriteConfigFile(config,hash)
 		Dim fileListPath As String=WriteFileList(File.Combine(uploadedPath,filepart.SubmittedFilename))
@@ -68,6 +72,13 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 	Else
 		resp.Write("wrong")
 	End If
+End Sub
+
+Sub isSupported(filename As String) As Boolean
+	If filename.EndsWith(".jpg") Or filename.EndsWith(".bmp") Or filename.EndsWith(".png") Then
+		Return True
+	End If
+	return False
 End Sub
 
 Sub WriteConfigFile(config As String,hash As String) As String
