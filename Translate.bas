@@ -58,6 +58,10 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		Dim returntypePart As Part=parts.Get("returntype")
 		returntype=returntypePart.GetValue(req.CharacterEncoding)
 		Dim hash As String=MD5(filepart.TempFile,"")
+		If DataExists(File.Combine(Main.tempDir,hash)) And usePrevious="true" Then
+			returnResult(returntype,hash,resp)
+			Return
+		End If
 		File.Copy(filepart.TempFile,"",uploadedPath,filepart.SubmittedFilename)
 		File.Delete(filepart.TempFile,"")
 		If isSupported(filepart.SubmittedFilename.ToLowerCase)=False Then
@@ -78,7 +82,7 @@ Sub isSupported(filename As String) As Boolean
 	If filename.EndsWith(".jpg") Or filename.EndsWith(".bmp") Or filename.EndsWith(".png") Then
 		Return True
 	End If
-	return False
+	Return False
 End Sub
 
 Sub WriteConfigFile(config As String,hash As String) As String
@@ -107,23 +111,7 @@ Sub Run(resp As ServletResponse,configPath As String,fileListPath As String,useP
 		If Success And ExitCode = 0 Then
 			Log("Success")
 			Log(StdOut)
-			Dim workDir As String=File.Combine(Main.tempDir,hash)
-			If returntype="json" Then
-				resp.ContentType="application/json"
-				If File.Exists(workDir,"auto.json") Then
-					resp.Write(File.ReadString(workDir,"auto.json"))
-				Else
-					resp.Write("[]")
-				End If
-			Else if returntype="html" Then
-				resp.ContentType="text/html"
-				resp.Write($"<img src="/temp/${hash}/image.jpg-output.jpg"  alt="result" />"$)
-			else if returntype="img" Then
-				Dim img() As Byte = File.ReadBytes(File.Combine(Main.tempDir,hash),"image.jpg-output.jpg")
-				Dim In As InputStream
-				In.InitializeFromBytesArray(img, 0, img.Length)
-				File.Copy2(In, resp.OutputStream)
-			End If
+			returnResult(returntype,hash,resp)
 		Else
 			Log(StdOut)
 			resp.Write(StdErr)
@@ -137,6 +125,26 @@ Sub Run(resp As ServletResponse,configPath As String,fileListPath As String,useP
 	StopMessageLoop
 End Sub
 
+Sub returnResult(returntype As String,hash As String,resp As ServletResponse)
+	Dim workDir As String=File.Combine(Main.tempDir,hash)
+	If returntype="json" Then
+		resp.ContentType="application/json"
+		If File.Exists(workDir,"auto.json") Then
+			resp.Write(File.ReadString(workDir,"auto.json"))
+		Else
+			resp.Write("[]")
+		End If
+	Else if returntype="html" Then
+		resp.ContentType="text/html"
+		resp.Write($"<img src="/temp/${hash}/image.jpg-output.jpg"  alt="result" />"$)
+	else if returntype="img" Then
+		Dim img() As Byte = File.ReadBytes(File.Combine(Main.tempDir,hash),"image.jpg-output.jpg")
+		Dim In As InputStream
+		In.InitializeFromBytesArray(img, 0, img.Length)
+		File.Copy2(In, resp.OutputStream)
+	End If
+End Sub
+
 Sub MD5(dir As String,filename As String) As String
 	Dim in As InputStream
 	in = File.OpenInput(dir,filename)
@@ -148,3 +156,18 @@ Sub MD5(dir As String,filename As String) As String
 	data = md.GetMessageDigest(buffer, "MD5")
 	Return Bconv.HexFromBytes(data)
 End Sub
+
+Sub DataExists(workDir As String) As Boolean
+	Dim result As Boolean=True
+	If File.Exists(workDir,"image.jpg")=False Then
+		result=False
+	End If
+	If File.Exists(workDir,"image.jpg-output.jpg")=False Then
+		result=False
+	End If
+	If File.Exists(workDir,"auto.json")=False Then
+		result=False
+	End If
+	Return result
+End Sub
+

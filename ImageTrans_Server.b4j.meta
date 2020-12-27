@@ -10,6 +10,6 @@ ModuleClosedNodes0=1
 ModuleClosedNodes1=
 ModuleClosedNodes2=
 ModuleClosedNodes3=
-NavigationStack=Translate,WriteConfigFile,52,6,Translate,Class_Globals,2,6,Main,Application_Error,38,0,Main,Process_Globals,13,6,Main,Timer1_Tick,45,6,Main,AppStart,29,6,CacheFilter,Filter,16,6,Translate,Run,110,6,Translate,Handle,66,6,Translate,isSupported,74,6
+NavigationStack=Main,Process_Globals,13,6,Main,Timer1_Tick,45,6,Main,AppStart,29,6,CacheFilter,Filter,16,6,Translate,isSupported,74,6,Translate,MD5,143,0,Translate,Run,102,6,Translate,returnResult,117,6,Translate,DataExists,149,0,Translate,Handle,57,6
 SelectedBuild=0
 VisibleModules=1,2,3
