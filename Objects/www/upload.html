@@ -20,15 +20,15 @@ function update(){
 	    params["otsu_enabled"]=true;
 	}
 	if (imageType=="normal"){
-	    params["useOCR"]=false;
+	    params["detection_method"]="heuristic";
 		params["ocrengine"]="baidu";
 		params["ocrlang"]="CHN_ENG";
 	}else if (imageType=="print"){
-	    params["useOCR"]=true;
+	    params["detection_method"]="OCR";
 		params["ocrengine"]="tesseract";
 		params["ocrlang"]="chi_sim+eng";
 	}else if (imageType=="complex"){
-	    params["useOCR"]=true;
+	    params["detection_method"]="OCR";
 	    params["ocrengine"]="google";
 	    params["ocrlang"]="auto";
 	}
@@ -61,8 +61,8 @@ function getSelectedRadio(name){
 <div>
 <div id="colortyperadios">
 <p>Color type:</p>
-<p><input type="radio" name="colortype" value="blackwhite" checked>Black/White</p>
-<p><input type="radio" name="colortype" value="color">Color</p>
+<p><input type="radio" name="colortype" value="blackwhite">Black/White</p>
+<p><input type="radio" name="colortype" value="color" checked>Color</p>
 </div>
 
 <div id="imagetyperadio">
@@ -76,10 +76,12 @@ function getSelectedRadio(name){
 
 <textarea id="params" class="ta" name="config" form="uploadform">
 {
+    "vertical_merge_for_OCR": true,
     "auto_clean": true,
     "otsu_enabled": true,
     "mtengine": "tencent",
     "remove_space": false,
+    "detection_method": "heuristic",
     "minimumHeight": 3,
     "addBorder": false,
     "reorder": false,
@@ -94,10 +96,29 @@ function getSelectedRadio(name){
     "ocr_interval": 200,
     "maximumHeight": 200,
     "chinese_punctuation": false,
-    "useOCR": false,
     "ocrengine": "baidu",
     "autoThreshold": true,
-    "minimumVSpan": 15
+    "minimumVSpan": 15,
+    "overlapped_width_percent": 50,	
+	"overlapped_height_percent": 70,
+    "fontStyles": [
+            {
+                "b4jfont": "System",
+                "line-height": 1.25,
+                "bold": false,
+                "fontname": "Arial",
+                "italic": false,
+                "shadowRadius": 2,
+                "bgcolor": "255,255,255",
+                "size": 15,
+                "name": "Text",
+                "fontcolor": "0,0,0",
+                "alignment": 1,
+                "wrap": true,
+                "shadowColor": "255,255,255,1",
+                "direction": 0
+            }
+        ]	
 }</textarea> 
 
 </body>
