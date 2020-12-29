@@ -21,8 +21,15 @@ function update(){
 	}
 	if (imageType=="normal"){
 	    params["detection_method"]="heuristic";
-		params["ocrengine"]="baidu";
-		params["ocrlang"]="CHN_ENG";
+		var jachk=document.getElementById("jachk");
+		if (jachk.checked==true){
+		    params["ocrengine"]="azure";
+		    params["ocrlang"]="unk";
+		}
+		else{
+		    params["ocrengine"]="tencent";
+		    params["ocrlang"]="auto";
+		}
 	}else if (imageType=="print"){
 	    params["detection_method"]="OCR";
 		params["ocrengine"]="tesseract";
@@ -71,6 +78,8 @@ function getSelectedRadio(name){
 <p><input type="radio" name="imagetype" value="print">Print</p>
 <p><input type="radio" name="imagetype" value="complex">Complex images</p>
 </div>
+<p>Source Language:</p>
+<p>Japanese: <input type="checkbox" name="japanese" id="jachk"></p>
 <button type="button" onclick="update()">Update params</button>
 </div>
 
@@ -90,13 +99,13 @@ function getSelectedRadio(name){
     "source": "auto",
     "minimumHSpan": 15,
     "target": "en",
-    "ocrlang": "CHN_ENG",
+    "ocrlang": "auto",
     "mt_interval": 200,
     "precision_mode": true,
     "ocr_interval": 200,
     "maximumHeight": 100,
     "chinese_punctuation": false,
-    "ocrengine": "baidu",
+    "ocrengine": "tencent",
     "autoThreshold": true,
     "minimumVSpan": 15,
     "overlapped_width_percent": 50,	
