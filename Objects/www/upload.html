@@ -23,8 +23,10 @@ function update(){
 	    params["detection_method"]="heuristic";
 		var jachk=document.getElementById("jachk");
 		if (jachk.checked==true){
-		    params["ocrengine"]="azure";
-		    params["ocrlang"]="unk";
+		    params["ocrengine"]="baidu";
+		    params["ocrlang"]="JAP";
+			params["remove_space"]=true;
+			params["reorder"]=true;
 		}
 		else{
 		    params["ocrengine"]="tencent";
