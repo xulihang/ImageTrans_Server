@@ -23,10 +23,10 @@ function update(){
 	    params["detection_method"]="heuristic";
 		var jachk=document.getElementById("jachk");
 		if (jachk.checked==true){
-		    params["ocrengine"]="baidu";
-		    params["ocrlang"]="JAP";
+		    params["ocrengine"]="tesseract";
+		    params["ocrlang"]="jpn_vert";
 			params["remove_space"]=true;
-			params["reorder"]=true;
+			params["stripfurigana"]=true;
 		}
 		else{
 		    params["ocrengine"]="tencent";
@@ -96,6 +96,7 @@ function getSelectedRadio(name){
     "minimumHeight": 3,
     "addBorder": false,
     "reorder": false,
+	"stripfurigana": false,
     "threshold": 200,
     "use_puretext": false,
     "source": "auto",
