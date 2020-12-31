@@ -67,22 +67,25 @@ function getSelectedRadio(name){
   <p>Return Type(json, img, html):<input type="text" name="returntype" value="html"></p>
   <input type="submit" value="Upload" />
 </form>
+<p>
+Adjust parameters to adapt to specific types of images. Remember to click Update Params button.
+</p>
 <div>
 <div id="colortyperadios">
-<p>Color type:</p>
+<p>Color Type:</p>
 <p><input type="radio" name="colortype" value="blackwhite">Black/White</p>
 <p><input type="radio" name="colortype" value="color" checked>Color</p>
 </div>
 
 <div id="imagetyperadio">
-<p>Image type:</p>
+<p>Image Type:</p>
 <p><input type="radio" name="imagetype" value="normal" checked>Normal (e.g. comic)</p>
 <p><input type="radio" name="imagetype" value="print">Print</p>
 <p><input type="radio" name="imagetype" value="complex">Complex images</p>
 </div>
 <p>Source Language:</p>
-<p>Japanese manga: <input type="checkbox" name="japanese" id="jachk"></p>
-<button type="button" onclick="update()">Update params</button>
+<p>Japanese in Manga: <input type="checkbox" name="japanese" id="jachk"></p>
+<button type="button" onclick="update()">Update Params</button>
 </div>
 
 <textarea id="params" class="ta" name="config" form="uploadform">
