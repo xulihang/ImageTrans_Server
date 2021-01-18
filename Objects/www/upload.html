@@ -14,36 +14,49 @@ function update(){
     var params=JSON.parse(ta.value);
 	var colorType=getSelectedRadio("colortype");
 	var imageType=getSelectedRadio("imagetype");
+	var fastmode=true;
+	var fastmodeChk=document.getElementById("fastmodechk");
+	var jachk=document.getElementById("jachk");
+	if (jachk.checked==true){
+	    fastmodeChk.checked=false;
+	}
 	if (colorType=="blackwhite"){
 	    params["otsu_enabled"]=false;
 	}else{
 	    params["otsu_enabled"]=true;
 	}
-	if (imageType=="normal"){
-	    params["detection_method"]="heuristic";
-		var jachk=document.getElementById("jachk");
-		if (jachk.checked==true){
-		    params["source"]="ja";
-		    params["ocrengine"]="tesseract";
-		    params["ocrlang"]="jpn_vert";
-			params["remove_space"]=true;
-			params["stripfurigana"]=true;
-			params["maximumHeight"]=55;
-			params["overlapped_height_percent"]=85;
-			params["textLocalizationProcess"]=["纵向合并","横向合并","过滤过小项","去除内部区域","拓展区域"];
-		}
-		else{
-		    params["ocrengine"]="tencent";
-		    params["ocrlang"]="auto";
-		}
-	}else if (imageType=="print"){
-	    params["detection_method"]="OCR";
-		params["ocrengine"]="tesseract";
-		params["ocrlang"]="chi_sim+eng";
-	}else if (imageType=="complex"){
-	    params["detection_method"]="OCR";
+	if (fastmodeChk.checked==true){
 	    params["ocrengine"]="google";
-	    params["ocrlang"]="auto";
+		params["mtengine"]="colorfulclouds";
+		params["detection_method"]="OCR";
+		params["precision_mode"]=false;
+	}
+	else{
+		if (imageType=="normal"){
+			params["detection_method"]="heuristic";
+			if (jachk.checked==true){
+				params["source"]="ja";
+				params["ocrengine"]="tesseract";
+				params["ocrlang"]="jpn_vert";
+				params["remove_space"]=true;
+				params["stripfurigana"]=true;
+				params["maximumHeight"]=55;
+				params["overlapped_height_percent"]=85;
+				params["textLocalizationProcess"]=["纵向合并","横向合并","过滤过小项","去除内部区域","拓展区域"];
+			}
+			else{
+				params["ocrengine"]="tencent";
+				params["ocrlang"]="auto";
+			}
+		}else if (imageType=="print"){
+			params["detection_method"]="OCR";
+			params["ocrengine"]="tesseract";
+			params["ocrlang"]="chi_sim+eng";
+		}else if (imageType=="complex"){
+			params["detection_method"]="OCR";
+			params["ocrengine"]="google";
+			params["ocrlang"]="auto";
+		}
 	}
     var result = JSON.stringify(params,null,4);
 	ta.value=result;
@@ -75,6 +88,7 @@ function getSelectedRadio(name){
 Adjust parameters to adapt to specific types of images. Remember to click Update Params button.
 </p>
 <div>
+<p>FastMode: <input type="checkbox" name="fastmode" id="fastmodechk" checked></p>
 <div id="colortyperadios">
 <p>Color Type:</p>
 <p><input type="radio" name="colortype" value="blackwhite">Black/White</p>
@@ -96,10 +110,11 @@ Adjust parameters to adapt to specific types of images. Remember to click Update
 {
     "resize": true,
     "vertical_merge_for_OCR": true,
+	"horizontal_merge_for_OCR": true,
     "auto_clean": true,
 	"blur": false,
     "otsu_enabled": true,
-    "mtengine": "tencent",
+    "mtengine": "colorfulclouds",
     "remove_space": false,
     "detection_method": "heuristic",
     "minimumHeight": 3,
