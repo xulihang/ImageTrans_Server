@@ -75,6 +75,10 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 			resp.Write("Only bmp, jpg and png are supported.")
 			Return
 		End If
+		If File.Size(uploadedPath,filepart.SubmittedFilename)>3*1024*1024 Then
+			resp.Write("File is too large.")
+			Return
+		End If
 		Log(filepart.SubmittedFilename)
 		Dim configPath As String=WriteConfigFile(config,hash)
 		Dim fileListPath As String=WriteFileList(File.Combine(uploadedPath,filepart.SubmittedFilename))
