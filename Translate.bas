@@ -18,6 +18,13 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		resp.Write("An instance is running. Please wait.")
 		Return
 	End If
+	If req.RemoteAddress<>Null Then
+		If Main.RecordAccess(req.RemoteAddress)=False Then
+			resp.Write("Exceed today's limit which is 5 images per day.")
+			Return
+		End If
+	End If
+
 	If req.ContentType.StartsWith("multipart/form-data") Then
 		Dim uploadedPath As String=File.Combine(File.DirApp,"uploaded")
 		If File.Exists(uploadedPath,"")=False Then

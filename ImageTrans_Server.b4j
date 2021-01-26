@@ -26,9 +26,12 @@ Sub Process_Globals
 	Public Running As Boolean=False
 	Public shs As List
 	Private Timer1 As Timer
+	Private Timer2 As Timer
+	Private accessedTimes As Map
 End Sub
 
 Sub AppStart (Args() As String)
+	accessedTimes.Initialize
 	Dim port As Int=51041
 	If Args.Length>0 Then
 		port=Args(0)
@@ -36,7 +39,10 @@ Sub AppStart (Args() As String)
 	shs.Initialize
 	Timer1.Initialize("Timer1",60*60*1000)
     Timer1.Enabled=True
+	Timer2.Initialize("Timer2",24*60*60*1000)
+	Timer2.Enabled=True
 	tempDir=File.Combine(File.Combine(File.DirApp,"www"),"temp")
+	
 	If File.Exists(tempDir,"")=False Then
 		File.MakeDir(tempDir,"")
 	End If
@@ -64,4 +70,29 @@ Sub Timer1_Tick
 	Next
 	shs.Clear
 	Running=False
+End Sub
+
+Sub Timer2_Tick
+	accessedTimes.Clear
+End Sub
+
+'return true if aaccess times less than 5 
+Sub RecordAccess(ip As String) As Boolean
+	Try
+		Log(ip)
+		Dim times As Int=0
+		If accessedTimes.ContainsKey(ip) Then
+			times=accessedTimes.Get(ip)
+		End If
+		times=times+1
+		If times<=5 Then
+			accessedTimes.Put(ip,times)
+			Return True
+		Else
+			Return False
+		End If
+	Catch
+		Log(LastException)
+	End Try
+    Return False
 End Sub
