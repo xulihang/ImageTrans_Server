@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>ImageTrans Online</title>
+	<script type="text/javascript" src="tabs.js"></script>
+	<script type="text/javascript" src="spark-md5.min.js"></script>	
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+	<link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+	<link rel="stylesheet" href="css/tabs.css">
+	<style type="text/css">
+		.ta {width: 300px;
+		height: 350px;}
+	</style>
+	<script type="text/javascript">
+    var computedHash;
+	function update(){
+		var ta=document.getElementById("params");
+		var params=JSON.parse(ta.value);
+		var colorType=getSelectedRadio("colortype");
+		var imageType=getSelectedRadio("imagetype");
+		var fastmode=true;
+		var fastmodeChk=document.getElementById("fastmodechk");
+		var jachk=document.getElementById("jachk");
+		if (jachk.checked==true){
+			fastmodeChk.checked=false;
+		}
+		if (colorType=="blackwhite"){
+			params["otsu_enabled"]=false;
+		}else{
+			params["otsu_enabled"]=true;
+		}
+		if (fastmodeChk.checked==true){
+			params["ocrengine"]="google";
+			params["mtengine"]="colorfulclouds";
+			params["detection_method"]="OCR";
+			params["precision_mode"]=false;
+		}
+		else{
+			if (imageType=="normal"){
+				params["detection_method"]="heuristic";
+				if (jachk.checked==true){
+					params["source"]="ja";
+					params["ocrengine"]="tesseract";
+					params["ocrlang"]="jpn_vert";
+					params["remove_space"]=true;
+					params["stripfurigana"]=true;
+					params["maximumHeight"]=55;
+					params["overlapped_height_percent"]=85;
+					params["textLocalizationProcess"]=["纵向合并","横向合并","过滤过小项","去除内部区域","拓展区域"];
+				}
+				else{
+					params["ocrengine"]="baidu_accurate";
+					params["ocrlang"]="auto";
+				}
+			}else if (imageType=="print"){
+				params["detection_method"]="OCR";
+				params["ocrengine"]="tesseract";
+				params["ocrlang"]="chi_sim+eng";
+			}else if (imageType=="complex"){
+				params["detection_method"]="OCR";
+				params["ocrengine"]="google";
+				params["ocrlang"]="auto";
+			}
+		}
+		var result = JSON.stringify(params,null,4);
+		ta.value=result;
+		//alert(getSelectedRadio("colortype"));
+		//alert(getSelectedRadio("imagetype"));
+	}
+
+	function getSelectedRadio(name){
+		var radios=document.getElementsByName(name)
+		for (i = 0; i < radios.length; i++) { 
+			var r=radios[i];
+			if (r.checked==true){
+				return r.value;
+			}
+		}
+	}
+	
+	function onFileChosen(event){
+		computeMD5(event);
+		showLocalImage(event);
+	}
+	
+	function showLocalImage(event){
+		var srcContainer =document.getElementById("srcContainer");
+		var tgtContainer = document.getElementById("tgtContainer");				
+		var file = event.target.files[0],
+			thisType = file.type,
+			thisSize = file.size,
+			reader = new FileReader();		
+				
+		reader.onload = function(e){
+		    clearElements(srcContainer,"img");
+			clearElements(tgtContainer,"img");
+			img = document.createElement("img");
+			img.src = e.target.result;
+			img.style = "max-width:100%"
+			srcContainer.append(img);
+		};
+		
+		reader.onerror = function () {
+			console.warn('oops, something went wrong.');
+		};
+		
+		reader.readAsDataURL(file);	
+	}
+	
+	function clearElements(parent,tagName){
+	    var elements=parent.getElementsByTagName(tagName);
+		while (elements.length>0){
+		    var ele=elements[0];
+			ele.remove();
+		}
+	}
+	
+	function computeMD5(event){
+		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+				file = event.target.files[0],
+				thisType = file.type,
+			    thisSize = file.size,
+				chunkSize = 2097152,                             // Read in chunks of 2MB
+				chunks = Math.ceil(file.size / chunkSize),
+				currentChunk = 0,
+				spark = new SparkMD5.ArrayBuffer(),
+				reader = new FileReader();		
+		//reader.readAsDataURL(file);			
+
+		reader.onload = function(e){
+			console.log('read chunk nr', currentChunk + 1, 'of', chunks);
+			spark.append(e.target.result);                   // Append array buffer
+			currentChunk++;
+
+			if (currentChunk < chunks) {
+				loadNext();
+			} else {
+			    computedHash=spark.end();
+				console.log('finished loading');
+				console.info('computed hash', computedHash);  // Compute hash
+			}
+		};
+		
+		reader.onerror = function () {
+			console.warn('oops, something went wrong.');
+		};
+		
+		function loadNext() {
+			var start = currentChunk * chunkSize,
+				end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
+
+			reader.readAsArrayBuffer(blobSlice.call(file, start, end));
+		}
+
+		loadNext();
+	}
+	
+	function uploadImg() {
+	    var uploadBtn=document.getElementById("uploadBtn");
+		
+		if (uploadBtn.innerText!="UPLOAD"){
+		    alert("Please wait.");
+		    return
+		}
+		
+	    var detectonly=document.getElementById("detectonly");
+		var useprevious=document.getElementById("useprevious");
+		if (detectonly.checked){
+			detectonly="true";
+		}else{
+			detectonly="false";
+		}
+		if (useprevious.checked){
+			useprevious="true";
+		}else{
+			useprevious="false";
+		}
+		const file = document.getElementById('imgfile')
+		if (file.value==""){
+		    alert("Please select a file first.");
+		    return
+		}
+        uploadBtn.innerText="Loading..."
+		var filename = file.files[0].name; 
+		var srcContainer = document.getElementById("srcContainer");
+		
+		var img = srcContainer.getElementsByTagName("img")[0];
+		var data = img.src;
+		var ta = document.getElementById("params");
+		var ajaxObj = new XMLHttpRequest();
+
+		const payload = {
+			"returntype": "base64",
+			"data": data,
+			"filename": filename,
+			"useprevious": useprevious,
+			"detectonly": detectonly,
+			"config": ta.value,
+			"md5": computedHash 
+		};
+		ajaxObj.open('POST', 'translate');
+		ajaxObj.setRequestHeader('Content-Type', 'application/json');
+		// send rquest with JSON payload
+		ajaxObj.send(JSON.stringify(payload));	
+        ajaxObj.onreadystatechange = function () {
+			uploadBtn.innerText="UPLOAD"
+            if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
+			    var tgtContainer = document.getElementById("tgtContainer");
+				clearElements(tgtContainer,"img");
+                var jsonobject = JSON.parse(ajaxObj.responseText);				
+				img = document.createElement("img");
+				img.src = "data:image/jpeg;base64,"+jsonobject["data"];
+				img.style = "max-width:100%";
+				tgtContainer.append(img);
+            }
+        }
+	}		
+	
+	function MD5(result){
+	    spark.append(result);                   // Append array buffer
+        currentChunk++;
+        if (currentChunk < chunks) {
+            loadNext();
+        } else {
+            console.log('finished loading');
+            console.info('computed hash', spark.end());  // Compute hash
+        }
+	}
+	
+	function loadNext() {
+        var start = currentChunk * chunkSize,
+            end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
+        fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
+    }
+	</script>  
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="tab" style="display:flex;overflow-x:auto">
+				<button class="tablinks" onclick="switchTab(event, 'uploader')">Upload Helper</button>
+				<button class="tablinks" onclick="switchTab(event, 'paramshelper')">Params Helper</button>
+				<button class="tablinks" onclick="switchTab(event, 'fullparams')">Full Params</button>
+			</div>	
+			<div id="uploader" class="tabcontent">
+				Choose Image: <input id="imgfile" type="file" name="image" onchange="onFileChosen(event)" /><button id="uploadBtn" onclick="uploadImg()">Upload</button>			 
+			</div>
+			<div id="paramshelper" class="tabcontent">
+				Detect Only: <input type="checkbox" id="detectonly" name="detectonly"><br/>
+				 Use Previous Data: <input type="checkbox" id="useprevious" name="useprevious" checked>
+				<p>Adjust parameters to adapt to specific types of images. Remember to click Update Params button.</p>
+				<button type="button" onclick="update()">Update Params</button>
+				<p>FastMode: <input type="checkbox" name="fastmode" id="fastmodechk" checked> (limited language support with 彩云小译)</p>
+				<div id="colortyperadios">
+				<p>Color Type:</p>
+				<p><input type="radio" name="colortype" value="blackwhite">Black/White</p>
+				<p><input type="radio" name="colortype" value="color" checked>Color</p>
+				</div>
+
+				<div id="imagetyperadio">
+				<p>Image Type:</p>
+				<p><input type="radio" name="imagetype" value="normal" checked>Normal (e.g. comic)</p>
+				<p><input type="radio" name="imagetype" value="print">Print</p>
+				<p><input type="radio" name="imagetype" value="complex">Complex images</p>
+				</div>
+				<p>Source Language:</p>
+				<p>Japanese in Manga: <input type="checkbox" name="japanese" id="jachk"></p>
+			</div>
+			<div id="fullparams" class="tabcontent">				
+				<textarea id="params" class="ta" name="config">
+{
+	"resize": true,
+	"vertical_merge_for_OCR": true,
+	"horizontal_merge_for_OCR": true,
+	"auto_clean": true,
+	"blur": false,
+	"otsu_enabled": true,
+	"mtengine": "tencent",
+	"remove_space": false,
+	"detection_method": "OCR",
+	"minimumHeight": 3,
+	"addBorder": false,
+	"reorder": false,
+	"stripfurigana": false,
+	"threshold": 200,
+	"use_puretext": false,
+	"source": "auto",
+	"minimumHSpan": 15,
+	"target": "en",
+	"ocrlang": "auto",
+	"mt_interval": 200,
+	"precision_mode": true,
+	"ocr_interval": 200,
+	"maximumHeight": 100,
+	"chinese_punctuation": false,
+	"ocrengine": "google",
+	"autoThreshold": true,
+	"minimumVSpan": 15,
+	"overlapped_width_percent": 50,	
+	"overlapped_height_percent": 70,
+	"dilation": 2,
+	"expanding_pix": 5,
+	"fontStyles": [
+			{
+				"b4jfont": "System",
+				"line-height": 1.25,
+				"bold": false,
+				"fontname": "Arial",
+				"italic": false,
+				"shadowRadius": 2,
+				"bgcolor": "255,255,255",
+				"size": 15,
+				"name": "Text",
+				"fontcolor": "0,0,0",
+				"alignment": 1,
+				"wrap": true,
+				"shadowColor": "255,255,255,1",
+				"direction": 0
+			}
+		]	
+}</textarea> 
+			</div>
+		</div>
+		<div class="row">			
+			<div id="tgtContainer" class="six columns"><div>Target:</div>
+			</div>
+			<div id="srcContainer" class="six columns"><div>Source:</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		switchTab(null,'uploader');
+	</script>
+</body>
+</html>
