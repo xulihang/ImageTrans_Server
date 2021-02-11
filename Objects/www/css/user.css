@@ -1,0 +1,5 @@
+.langselect { display: inline;} 
+
+@media screen and (max-device-width: 600px){
+    .langselect { display: block;} 
+}
