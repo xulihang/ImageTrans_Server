@@ -211,13 +211,20 @@
 		ajaxObj.send(JSON.stringify(payload));	
         ajaxObj.onreadystatechange = function () {
 			status.innerText="";
-            if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {			    
-                var jsonobject = JSON.parse(ajaxObj.responseText);				
-				img = document.createElement("img");
-				img.src = "data:image/jpeg;base64,"+jsonobject["data"];
-				img.style = "max-width:100%";
-				tgtContainer.append(img);
+            if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
+				try {
+					var jsonobject = JSON.parse(ajaxObj.responseText);				
+					img = document.createElement("img");
+					img.src = "data:image/jpeg;base64,"+jsonobject["data"];
+					img.style = "max-width:100%";
+					tgtContainer.append(img);
+				} catch (error) {
+					alert(ajaxObj.responseText);
+				}			
             }
+        }
+		ajaxObj.onerror = function () {
+          window.open("translate");
         }
 	}		
 	
