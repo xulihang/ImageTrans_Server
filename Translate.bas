@@ -18,24 +18,28 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		resp.Write("An instance is running. Please wait.")
 		Return
 	End If
+	
 	If req.RemoteAddress<>Null Then
 		If Main.RecordAccess(req.RemoteAddress)=False Then
 			resp.Write("Exceed today's limit which is 5 images per day.")
 			Return
 		End If
 	End If
-
+	
+	Dim config As String
+	Dim usePrevious As String="true"
+	Dim detectOnly As String="false"
+	Dim filename As String
+	Dim uploadedPath As String=File.Combine(File.DirApp,"uploaded")
+	If File.Exists(uploadedPath,"")=False Then
+		File.MakeDir(uploadedPath,"")
+	End If
+	
 	If req.ContentType.StartsWith("multipart/form-data") Then
-		Dim uploadedPath As String=File.Combine(File.DirApp,"uploaded")
-		If File.Exists(uploadedPath,"")=False Then
-			File.MakeDir(uploadedPath,"")
-		End If
 		Dim parts As Map = req.GetMultipartData(File.DirApp & "/uploaded", 10000000)
 		Dim filepart As Part = parts.Get("image")
 		Dim configpart As Part = parts.Get("config")
-		Dim config As String
-		config=configpart.GetValue(req.CharacterEncoding)
-		Dim detectOnly As String="false"
+		config=configpart.GetValue(req.CharacterEncoding)		
 		If parts.ContainsKey("detectonly") Then
 			Dim detectpart As Part = parts.Get("detectonly")
 			If detectpart.GetValue(req.CharacterEncoding)="on" Then
@@ -44,7 +48,7 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 				detectOnly="false"
 			End If
 		End If
-		Dim usePrevious As String
+		
 		If parts.ContainsKey("useprevious") Then
 			Dim usepreviouspart As Part = parts.Get("useprevious")
 			'Log("useprevious:"&usepreviouspart.GetValue(req.CharacterEncoding))
@@ -56,9 +60,7 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		Else
 			usePrevious="false"
 		End If
-		If detectOnly="true" Then
-			usePrevious="false"
-		End If
+
 		Log("detect only:"&detectOnly)
 		Log("usePrevious:"&usePrevious)
 		Dim returntype As String
@@ -71,22 +73,48 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		End If
 		File.Copy(filepart.TempFile,"",uploadedPath,filepart.SubmittedFilename)
 		File.Delete(filepart.TempFile,"")
-		If isSupported(filepart.SubmittedFilename.ToLowerCase)=False Then
+
+		filename=filepart.SubmittedFilename
+		
+		If isSupported(filename.ToLowerCase)=False Then
 			resp.Write("Only bmp, jpg and png are supported.")
 			Return
 		End If
-		If File.Size(uploadedPath,filepart.SubmittedFilename)>3*1024*1024 Then
+		If File.Size(uploadedPath,filename)>3*1024*1024 Then
 			resp.Write("File is too large.")
 			Return
 		End If
-		Log(filepart.SubmittedFilename)
-		Dim configPath As String=WriteConfigFile(config,hash)
-		Dim fileListPath As String=WriteFileList(File.Combine(uploadedPath,filepart.SubmittedFilename))
-		Run(resp,configPath,fileListPath,usePrevious,detectOnly,hash,returntype)
-		StartMessageLoop '<---
+		
+	Else if req.ContentType.StartsWith("application/json") Then
+		Dim bytes() As Byte = Bit.InputStreamToBytes(req.InputStream)	
+		Dim data As String=BytesToString(bytes,0,bytes.Length,"UTF-8")
+		Dim json As JSONParser
+		json.Initialize(data)
+		Dim params As Map=json.NextObject
+		filename=params.Get("filename")
+		config=params.Get("config")
+		usePrevious=params.Get("useprevious")
+		detectOnly=params.Get("detectonly")
+		hash=params.Get("md5")
+		returntype="base64"
+		If DataExists(File.Combine(Main.tempDir,hash)) And usePrevious="true" Then
+			returnResult(returntype,hash,resp)
+			Return
+		End If
+		
+		Dim base64Data As String=params.Get("data")
+		base64Data=base64Data.Replace("data:image/jpeg;base64,","")
+		Dim su As StringUtils
+		File.WriteBytes(uploadedPath,filename,su.DecodeBase64(base64Data))
 	Else
 		resp.Write("wrong")
+		Return
 	End If
+	Log(filename)
+	Dim configPath As String=WriteConfigFile(config,hash)
+	Dim fileListPath As String=WriteFileList(File.Combine(uploadedPath,filename))
+	Run(resp,configPath,fileListPath,usePrevious,detectOnly,hash,returntype)
+	StartMessageLoop '<---
 End Sub
 
 Sub isSupported(filename As String) As Boolean
@@ -138,6 +166,8 @@ End Sub
 
 Sub returnResult(returntype As String,hash As String,resp As ServletResponse)
 	Dim workDir As String=File.Combine(Main.tempDir,hash)
+	Log(returntype)
+	Log(hash)
 	If returntype="json" Then
 		resp.ContentType="application/json"
 		If File.Exists(workDir,"auto.json") Then
@@ -153,6 +183,16 @@ Sub returnResult(returntype As String,hash As String,resp As ServletResponse)
 		Dim In As InputStream
 		In.InitializeFromBytesArray(img, 0, img.Length)
 		File.Copy2(In, resp.OutputStream)
+	else if returntype="base64" Then
+		resp.ContentType="application/json"
+		Dim su As StringUtils
+		Dim map1 As Map
+		map1.Initialize
+		map1.Put("data",su.EncodeBase64(File.ReadBytes(File.Combine(Main.tempDir,hash),"image.jpg-output.jpg")))
+		Dim json As JSONGenerator
+		json.Initialize(map1)
+		Log(json.ToString)
+		resp.Write(json.ToString)
 	End If
 End Sub
 

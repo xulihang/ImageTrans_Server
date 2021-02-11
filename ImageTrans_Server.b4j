@@ -6,11 +6,13 @@ Library2=jserver
 Library3=jshell
 Library4=byteconverter
 Library5=encryption
+Library6=jstringutils
+Library7=json
 Module1=Hello
 Module2=Translate
 Module3=CacheFilter
 NumberOfFiles=0
-NumberOfLibraries=5
+NumberOfLibraries=7
 NumberOfModules=3
 Version=7.8
 @EndOfDesignText@
@@ -80,6 +82,9 @@ End Sub
 Sub RecordAccess(ip As String) As Boolean
 	Try
 		Log(ip)
+		If ip.StartsWith("127") Then
+			return True
+		End If
 		Dim times As Int=0
 		If accessedTimes.ContainsKey(ip) Then
 			times=accessedTimes.Get(ip)
