@@ -83,7 +83,7 @@ Sub RecordAccess(ip As String) As Boolean
 	Try
 		Log(ip)
 		If ip.StartsWith("127") Then
-			return True
+			Return True
 		End If
 		Dim times As Int=0
 		If accessedTimes.ContainsKey(ip) Then

@@ -80,10 +80,6 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 			resp.Write("Only bmp, jpg and png are supported.")
 			Return
 		End If
-		If File.Size(uploadedPath,filename)>3*1024*1024 Then
-			resp.Write("File is too large.")
-			Return
-		End If
 		
 	Else if req.ContentType.StartsWith("application/json") Then
 		Dim bytes() As Byte = Bit.InputStreamToBytes(req.InputStream)	
@@ -111,6 +107,12 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		resp.Write("wrong")
 		Return
 	End If
+	
+	If File.Size(uploadedPath,filename)>3*1024*1024 Then
+		resp.Write("File is too large.")
+		Return
+	End If
+	
 	Log(filename)
 	Dim configPath As String=WriteConfigFile(config,hash)
 	Dim fileListPath As String=WriteFileList(File.Combine(uploadedPath,filename))
