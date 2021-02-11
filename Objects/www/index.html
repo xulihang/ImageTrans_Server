@@ -158,9 +158,10 @@
 	}
 	
 	function uploadImg() {
-	    var uploadBtn=document.getElementById("uploadBtn");
+		updateLangsParams();
+	    var status=document.getElementById("status");
 		
-		if (uploadBtn.innerText!="UPLOAD"){
+		if (status.innerText!=""){
 		    alert("Please wait.");
 		    return
 		}
@@ -182,7 +183,11 @@
 		    alert("Please select a file first.");
 		    return
 		}
-        uploadBtn.innerText="Loading..."
+		
+        status.innerText="Loading..."
+		var tgtContainer = document.getElementById("tgtContainer");
+		clearElements(tgtContainer,"img");
+		
 		var filename = file.files[0].name; 
 		var srcContainer = document.getElementById("srcContainer");
 		
@@ -205,10 +210,8 @@
 		// send rquest with JSON payload
 		ajaxObj.send(JSON.stringify(payload));	
         ajaxObj.onreadystatechange = function () {
-			uploadBtn.innerText="UPLOAD"
-            if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
-			    var tgtContainer = document.getElementById("tgtContainer");
-				clearElements(tgtContainer,"img");
+			status.innerText="";
+            if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {			    
                 var jsonobject = JSON.parse(ajaxObj.responseText);				
 				img = document.createElement("img");
 				img.src = "data:image/jpeg;base64,"+jsonobject["data"];
@@ -234,6 +237,31 @@
             end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
         fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
     }
+	
+	function langSelected(isSource,value){
+	    var langInput;
+		if (isSource==true){
+			langInput=document.getElementById("srcLang");
+		}else{
+			langInput=document.getElementById("tgtLang");
+		}
+		if (value=="custom"){
+		    langInput.disabled=false;
+		}else{
+		    langInput.disabled=true;
+			langInput.value=value;	
+			updateLangsParams();			
+		}
+	}
+	
+	function updateLangsParams(){
+	    var ta=document.getElementById("params");
+	    var params=JSON.parse(ta.value);
+		params["source"]=document.getElementById("srcLang").value;
+		params["target"]=document.getElementById("tgtLang").value;
+        var result = JSON.stringify(params,null,4);
+		ta.value=result;		
+	}
 	</script>  
 </head>
 <body>
@@ -245,7 +273,28 @@
 				<button class="tablinks" onclick="switchTab(event, 'fullparams')">Full Params</button>
 			</div>	
 			<div id="uploader" class="tabcontent">
-				Choose Image: <input id="imgfile" type="file" name="image" onchange="onFileChosen(event)" /><button id="uploadBtn" onclick="uploadImg()">Upload</button>			 
+				Choose Image: <input id="imgfile" type="file" name="image" onchange="onFileChosen(event)" /><button onclick="uploadImg()">Upload</button>		
+				<div id="langselector">
+					From:
+					<input type="text" id="srcLang" value="auto" disabled />
+					<select size="1" onchange="langSelected(true,this.value)">
+						<option value="auto">auto</option>
+						<option value="zh">Chinese</option>
+						<option value="ja">Japanese</option>
+						<option value="en">English</option>
+						<option value="custom">Custom</option>
+					</select>						
+					To:
+					<input type="text" id="tgtLang" value="en" disabled />
+					<select size="1" onchange="langSelected(false,this.value)">
+						<option value="en">English</option>
+						<option value="fr">French</option>
+						<option value="zh">Chinese</option>
+						<option value="ja">Japanese</option>					
+						<option value="custom">Custom</option>
+					</select>				
+				</div>
+
 			</div>
 			<div id="paramshelper" class="tabcontent">
 				Detect Only: <input type="checkbox" id="detectonly" name="detectonly"><br/>
@@ -325,6 +374,7 @@
 		</div>
 		<div class="row">			
 			<div id="tgtContainer" class="six columns"><div>Target:</div>
+			<div id="status"></div>
 			</div>
 			<div id="srcContainer" class="six columns"><div>Source:</div>
 			</div>
