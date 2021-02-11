@@ -96,6 +96,7 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		usePrevious=params.Get("useprevious")
 		detectOnly=params.Get("detectonly")
 		hash=params.Get("md5")
+		hash=hash.ToUpperCase
 		returntype="base64"
 		If DataExists(File.Combine(Main.tempDir,hash)) And usePrevious="true" Then
 			returnResult(returntype,hash,resp)
