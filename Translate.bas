@@ -91,18 +91,21 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		config=params.Get("config")
 		usePrevious=params.Get("useprevious")
 		detectOnly=params.Get("detectonly")
-		hash=params.Get("md5")
-		hash=hash.ToUpperCase
+		
+		Dim base64Data As String=params.Get("data")
+		'data:image/jpeg;base64,
+		base64Data=Regex.Replace("data.*?base64,",base64Data,"")
+		Dim su As StringUtils
+		File.WriteBytes(uploadedPath,filename,su.DecodeBase64(base64Data))
+		hash=MD5(uploadedPath,filename)
+		
 		returntype="base64"
 		If DataExists(File.Combine(Main.tempDir,hash)) And usePrevious="true" Then
 			returnResult(returntype,hash,resp)
 			Return
 		End If
 		
-		Dim base64Data As String=params.Get("data")
-		base64Data=base64Data.Replace("data:image/jpeg;base64,","")
-		Dim su As StringUtils
-		File.WriteBytes(uploadedPath,filename,su.DecodeBase64(base64Data))
+
 	Else
 		resp.Write("wrong")
 		Return
