@@ -102,14 +102,19 @@
 	}
 	
 	function appendSrcImg(data){
-		var srcContainer =document.getElementById("srcContainer");
-		var tgtContainer = document.getElementById("tgtContainer");	
-		clearElements(srcContainer,"img");
-		clearElements(tgtContainer,"img");
-		img = document.createElement("img");
-		img.src = data;
-		img.style = "max-width:100%"
-		srcContainer.append(img);
+	    if (fileOverSize(data)==true){
+		    alert("File oversize (>3MB).");
+		} else {
+			var srcContainer =document.getElementById("srcContainer");
+			var tgtContainer = document.getElementById("tgtContainer");	
+			clearElements(srcContainer,"img");
+			clearElements(tgtContainer,"img");
+			img = document.createElement("img");
+			img.src = data;
+			img.style = "max-width:100%"
+			srcContainer.append(img);
+		}
+
 	}
 	
 	function clearElements(parent,tagName){
@@ -254,6 +259,17 @@
         var result = JSON.stringify(params,null,4);
 		ta.value=result;		
 	}
+	
+	function fileOverSize(base64){
+	    var strLen=base64.length;
+        var fileSize=strLen-(strLen/8)*2; //in byte
+		if (fileSize>3*1024*1024){
+		    return true;
+		}else{
+		    return false;
+		}
+	}
+	
 	</script>  
 </head>
 <body>
