@@ -49,6 +49,8 @@
 			var tgtContainer = document.getElementById("tgtContainer");	
 			clearElements(srcContainer,"img");
 			clearElements(tgtContainer,"img");
+			var overlayContainer = document.getElementById("overlay");
+		    clearElements(overlayContainer,"div");
 			img = document.createElement("img");
 			img.src = data;
 			img.style = "width:100%"
