@@ -39,7 +39,9 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 	If engine = "youdao" Then
 		youdao(textList,sourceLang,targetLang,appid,key,resp)
 	else if engine = "googlewithoutapikey" Then
-		google(textList,sourceLang,targetLang,key,resp)
+		google(textList,sourceLang,targetLang,False,resp)
+	else if engine = "googlewithoutapikey_cn" Then
+		google(textList,sourceLang,targetLang,True,resp)
 	else if engine = "google" Then
 		google2(textList,sourceLang,targetLang,key,resp)
 	End If
@@ -95,16 +97,14 @@ End Sub
 
 
 
-Sub google(textList As List,sourceLang As String,targetLang As String,key As String,resp As ServletResponse)
+Sub google(textList As List,sourceLang As String,targetLang As String,useCN As Boolean,resp As ServletResponse)
 	Dim tgtList As List
 	tgtList.Initialize
 	For Each source As String In textList
 		Dim target As String
-		Dim useCN As Boolean=True
 		Dim url As String
-		If key="global_domain" Then
-			useCN=False
-		End If
+		Log("useCN")
+		Log(useCN)
 		If useCN Then
 			url="https://translate.google.cn/translate_a/t?client=dict-chrome-ex"
 		Else

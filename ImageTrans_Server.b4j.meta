@@ -25,6 +25,6 @@ ModuleClosedNodes5=
 ModuleClosedNodes6=
 ModuleClosedNodes7=
 ModuleClosedNodes8=
-NavigationStack=Main,AppStart,41,2,OCRVertices,Class_Globals,0,0,OCR,Handle,37,6,OCR,youdao,119,4,OCR,google,170,6,OCR,Paragraph2Box,213,1,MT,youdao,87,1,MT,google2,184,0,MT,google,141,6,MT,Handle,36,6
+NavigationStack=Main,AppStart,41,2,OCRVertices,Class_Globals,0,0,OCR,Handle,37,6,OCR,youdao,119,4,OCR,google,170,6,OCR,Paragraph2Box,213,1,MT,youdao,87,1,MT,google2,172,0,MT,Handle,35,6,MT,google,98,6
 SelectedBuild=0
 VisibleModules=2,7,1,4,5,8,6,3
