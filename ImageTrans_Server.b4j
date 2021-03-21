@@ -11,14 +11,15 @@ Library7=jstringutils
 Library8=jokhttputils2
 Module1=CacheFilter
 Module2=Hello
-Module3=OCR
-Module4=OCRResult
-Module5=OCRVertices
-Module6=Translate
-Module7=Utils
+Module3=MT
+Module4=OCR
+Module5=OCRResult
+Module6=OCRVertices
+Module7=Translate
+Module8=Utils
 NumberOfFiles=0
 NumberOfLibraries=8
-NumberOfModules=7
+NumberOfModules=8
 Version=8.9
 @EndOfDesignText@
 'Non-UI application (console / server application)
@@ -59,6 +60,7 @@ Sub AppStart (Args() As String)
 	srvr.AddHandler("/hello","Hello",False)
 	srvr.AddHandler("/translate","Translate",False)
 	srvr.AddHandler("/ocr","OCR",False)
+	srvr.AddHandler("/mt","MT",False)
 	srvr.AddFilter("/*", "CacheFilter", False)
 	srvr.Port=port
 	srvr.Start

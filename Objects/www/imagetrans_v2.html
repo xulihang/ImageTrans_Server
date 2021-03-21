@@ -105,9 +105,11 @@
 		
 		var appid=document.getElementById("appid").value;
 		var key=document.getElementById("key").value;
+		if (key==""){
+		    alert("Key is empty.");
+		}
 		var engine=document.getElementById("ocrselect").value;
 		var ajaxObj = new XMLHttpRequest();
-		var timestamp = new Date().toString();
 		const params = {
 			"img": base64_data,
 			"engine": engine,
@@ -145,23 +147,89 @@
 	    var imgHeight=img.naturalHeight;
 		var imgWidth=img.naturalWidth;
 		var overlayContainer = document.getElementById("overlay");
-		
+		var fontsize = document.getElementById("fontsize").value;
+		var removeSpaces = document.getElementById("removeSpaces").checked;
+		var removeLineBreaks = document.getElementById("removeLineBreaks").checked;
 	    for (i=0;i<boxes.length;i++){
 		    var box = boxes[i];
 			boxdiv = document.createElement("div");
 			boxdiv.className="textbox";		
-            boxdiv.innerText=box["text"];			
+			var text = box["text"];
+			console.log(text);
+			if (removeSpaces==true){
+			    text=text.replace(/ /g,"");
+			}
+			if (removeLineBreaks==true){
+			    text=text.replace(/\n/g,"");
+				console.log("remove breaks");
+			}
+			console.log(text);
+            boxdiv.innerText=text;			
 			boxdiv.style.left = box["x0"]/imgWidth*100 + "%";
 			boxdiv.style.top = box["y0"]/imgHeight*100 + "%";
 			boxdiv.style.width = (box["x1"]-box["x0"])/imgWidth*100 + "%";
-			boxdiv.style.height = (box["y2"]-box["y0"])/imgHeight*100 + "%";
+			boxdiv.style.minHeight = (box["y2"]-box["y0"])/imgHeight*100 + "%";
+			boxdiv.style.height = "fit-content";
+			boxdiv.style.fontSize = fontsize;
 			boxdiv.contentEditable="true";
 		    overlayContainer.append(boxdiv);
 		}
 	}
 	
-	function translate(){
+	function translateBoxes(){
+	    var overlayContainer = document.getElementById("overlay");
+		var boxes = overlayContainer.getElementsByClassName("textbox");
+		if (boxes.length==0){
+		    alert("No box to translate.");
+			return
+		}
+		var textList=[];
+		for (i=0;i<boxes.length;i++){
+		    var box = boxes[i];
+			textList.push(box.innerText);
+		}
+		var appid=document.getElementById("appid").value;
+		var key=document.getElementById("key").value;
+		if (key==""){
+		    alert("Key is empty.");
+		}
+		var engine=document.getElementById("ocrselect").value;
+		var src=document.getElementById("srcLang").value;
+		var tgt=document.getElementById("tgtLang").value;
+		var ajaxObj = new XMLHttpRequest();
+		const params = {
+			"text": textList,
+			"engine": engine,
+			"src": src,
+			"tgt": tgt,
+			"key": key,
+			"appid": appid
+		};
+		ajaxObj.open('POST', 'mt');
+		ajaxObj.setRequestHeader('Content-Type', 'application/json');
+		ajaxObj.send(JSON.stringify(params));
+		ajaxObj.onreadystatechange = function () {
+			status.innerText="";
+			if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
+				try {
+					var jsonobject = JSON.parse(ajaxObj.responseText);
+					console.log(jsonobject);
+					fillTranslations(boxes,jsonobject)
+				} catch (error) {
+					alert(ajaxObj.responseText);
+				}			
+			}
+		}
+		ajaxObj.onerror = function () {
+			console.log("error");
+		}
+	}
 	
+	function fillTranslations(boxes,translations){
+		for (i=0;i<boxes.length;i++){
+		    var box = boxes[i];
+			box.innerText=translations[i];
+		}
 	}
 	
 	function methodChanged(value){
@@ -278,10 +346,13 @@
 						<input type="text" id="tgtLang" value="en" disabled />
 					</div>
 				</div>
-				<button onclick="translate()">Translate</button>
+				<button onclick="translateBoxes()">Translate</button>
 			</div>
 
 			<div id="settings" class="tabcontent">
+			    Remove spaces:<input type="checkbox" id="removeSpaces">
+				Remove line breaks:<input type="checkbox" id="removeLineBreaks" checked><br/>
+				Font size: <input type="text" id="fontsize" value="16px"/>
 				<div class="ocrselect">
 				    OCR Engline:
 					<select size="1" id="ocrselect">

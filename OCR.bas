@@ -123,8 +123,8 @@ Sub youdao(base64 As String,lang As String,appid As String,key As String, resp A
 			Next
 		Catch
 			Log(LastException)
+			resp.SendError(500,LastException.Message)
 		End Try
-
 	End If
 	resp.Write(Utils.OCRResults2JSON(results))
 	StopMessageLoop
@@ -197,6 +197,7 @@ Sub google(base64 As String,lang As String,key As String, resp As ServletRespons
 			Next
 		Catch
 			Log(LastException)
+			resp.SendError(500,LastException.Message)
 		End Try
 	End If
 	RemoveOverlapped(boxes)
