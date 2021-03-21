@@ -167,7 +167,8 @@
             boxdiv.innerText=text;			
 			boxdiv.style.left = box["x0"]/imgWidth*100 + "%";
 			boxdiv.style.top = box["y0"]/imgHeight*100 + "%";
-			boxdiv.style.width = (box["x1"]-box["x0"])/imgWidth*100 + "%";
+			boxdiv.style.minWidth = (box["x1"]-box["x0"])/imgWidth*100 + "%";
+			boxdiv.style.width = "min-content";
 			boxdiv.style.minHeight = (box["y2"]-box["y0"])/imgHeight*100 + "%";
 			boxdiv.style.height = "fit-content";
 			boxdiv.style.fontSize = fontsize;
@@ -191,9 +192,9 @@
 		var appid=document.getElementById("appid").value;
 		var key=document.getElementById("key").value;
 		if (key==""){
-		    alert("Key is empty.");
+		    console.log("Key is empty.");
 		}
-		var engine=document.getElementById("ocrselect").value;
+		var engine=document.getElementById("mtselect").value;
 		var src=document.getElementById("srcLang").value;
 		var tgt=document.getElementById("tgtLang").value;
 		var ajaxObj = new XMLHttpRequest();
@@ -205,6 +206,7 @@
 			"key": key,
 			"appid": appid
 		};
+		console.log(params);
 		ajaxObj.open('POST', 'mt');
 		ajaxObj.setRequestHeader('Content-Type', 'application/json');
 		ajaxObj.send(JSON.stringify(params));
@@ -362,7 +364,8 @@
 				</div>
 				<div class="mtselect">
 				    Machine Translation Engline:
-					<select size="1" id="mtselect">
+					<select size="1" id="mtselect">					
+						<option value="googlewithoutapikey">Google Wihout API Key</option>
 					    <option value="google">Google</option>					
 					    <option value="youdao">Youdao</option>
 				    </select>					

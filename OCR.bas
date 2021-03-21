@@ -174,7 +174,7 @@ Sub google(base64 As String,lang As String,key As String, resp As ServletRespons
 	wait for (job) JobDone(job As HttpJob)
 	If job.Success Then
 		Try
-			'Log(job.GetString)
+			Log(job.GetString)
 			'File.WriteString(File.DirApp,"out.json",job.GetString)
 			Dim responses As List
 			Dim json As JSONParser
