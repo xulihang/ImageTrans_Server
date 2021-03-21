@@ -38,6 +38,8 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 	resp.ContentType="application/json"
 	If engine = "youdao" Then
 		youdao(textList,sourceLang,targetLang,appid,key,resp)
+	else if engine="tencent" Then
+		tencent(textList,sourceLang,targetLang,appid,key,resp)
 	else if engine = "googlewithoutapikey" Then
 		google(textList,sourceLang,targetLang,False,resp)
 	else if engine = "googlewithoutapikey_cn" Then
@@ -161,6 +163,70 @@ Sub google(textList As List,sourceLang As String,targetLang As String,useCN As B
 	jsonG.Initialize2(tgtList)
 	resp.Write(jsonG.ToString)
 	StopMessageLoop
+End Sub
+
+Sub tencent(textList As List,sourceLang As String,targetLang As String,id As String,key As String,resp As ServletResponse)
+	If key="" And id="" Then
+		key=File.ReadString(File.DirApp,"tencent_key").Trim
+		id=File.ReadString(File.DirApp,"tencent_id").Trim
+	End If
+	Dim tgtList As List
+	tgtList.Initialize
+	For Each source As String In textList
+		Sleep(200)
+		Dim target As String	
+		Dim su As StringUtils
+		Dim params As String
+		Dim nounce As Int
+		Dim timestamp As Int=DateTime.Now/1000
+		nounce=Rnd(1000,2000)
+		params="Action=TextTranslate&Nonce="&nounce&"&ProjectId=0&Region=ap-shanghai&SecretId="&id&"&Source="&sourceLang&"&SourceText="&source&"&Target="&targetLang&"&Timestamp="&timestamp&"&Version=2018-03-21"
+		'add signature
+		source=su.EncodeUrl(source,"UTF-8")
+		params="Action=TextTranslate&Nonce="&nounce&"&ProjectId=0&Region=ap-shanghai&SecretId="&id&"&Signature="&getSignature(key,params)&"&Source="&sourceLang&"&SourceText="&source&"&Target="&targetLang&"&Timestamp="&timestamp&"&Version=2018-03-21"
+		'Log(params)
+		Dim job As HttpJob
+		job.Initialize("job",Me)
+		job.Download("https://tmt.ap-shanghai.tencentcloudapi.com/?"&params)
+		wait For (job) JobDone(job As HttpJob)
+		If job.Success Then
+			Log(job.GetString)
+			Try
+				Dim json As JSONParser
+				json.Initialize(job.GetString)
+				Dim Response As Map
+				Response=json.NextObject.Get("Response")
+				target=Response.Get("TargetText")
+			Catch
+				Log(LastException)
+			End Try
+		Else
+			target=""
+		End If
+		job.Release
+		tgtList.Add(target)
+	Next
+	Dim jsonG As JSONGenerator
+	jsonG.Initialize2(tgtList)
+	resp.Write(jsonG.ToString)
+	StopMessageLoop
+End Sub
+
+Sub getSignature(key As String,params As String) As String
+	Dim mactool As Mac
+	Dim k As KeyGenerator
+	k.Initialize("HMACSHA1")
+	Dim su As StringUtils
+	Dim combined As String="GETtmt.ap-shanghai.tencentcloudapi.com/?"&params
+	k.KeyFromBytes(Bconv.StringToBytes(key,"UTF-8"))
+	mactool.Initialise("HMACSHA1",k.Key)
+	mactool.Update(combined.GetBytes("UTF-8"))
+	Dim bb() As Byte
+	bb=mactool.Sign
+	Dim base As Base64
+	Dim sign As String=base.EncodeBtoS(bb,0,bb.Length)
+	sign=su.EncodeUrl(sign,"UTF-8")
+	Return sign
 End Sub
 
 Sub google2(textList As List,sourceLang As String,targetLang As String,key As String,resp As ServletResponse)

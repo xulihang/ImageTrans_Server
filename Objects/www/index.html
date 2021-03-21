@@ -184,13 +184,20 @@
 		    alert("No box to translate.");
 			return
 		}
+		var status=document.getElementById("status");
+		
+		if (status.innerText!=""){
+		    alert("Please wait.");
+		    return
+		}
+		status.innerText="Loading..."
 		var textList=[];
 		for (i=0;i<boxes.length;i++){
 		    var box = boxes[i];
 			textList.push(box.innerText);
 		}
-		var appid=document.getElementById("appid").value;
-		var key=document.getElementById("key").value;
+		var appid=document.getElementById("mtappid").value;
+		var key=document.getElementById("mtkey").value;
 		if (key==""){
 		    console.log("Key is empty.");
 		}
@@ -362,18 +369,21 @@
 					    <option value="youdao">Youdao</option>
 				    </select>
 				</div>
+				Please fill your own api keys: <br/>
+				OCR Key: <input type="password" id="key" value=""/> <br/>
+				OCR App ID (required by youdao): <input type="text" id="appid" value=""/> <br/>
 				<div class="mtselect">
 				    Machine Translation Engline:
-					<select size="1" id="mtselect">					
+					<select size="1" id="mtselect">	
+                        <option value="tencent">Tencent</option>					
 						<option value="googlewithoutapikey_cn">Google Wihout API Key (China)</option>
 						<option value="googlewithoutapikey">Google Wihout API Key</option>
 					    <option value="google">Google</option>					
 					    <option value="youdao">Youdao</option>
 				    </select>					
 				</div>
-				Please fill your own api keys: <br/>
-				Key: <input type="password" id="key" value=""/> <br/>
-				App ID (required by youdao): <input type="text" id="appid" value=""/> 
+				MT Key: <input type="password" id="mtkey" value=""/> <br/>
+				MT App ID: <input type="text" id="mtappid" value=""/> 
 				
 			</div>
 		</div>
