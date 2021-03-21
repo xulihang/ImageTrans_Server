@@ -31,10 +31,10 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 		Return
 	End If
 	Dim base64 As String=params.Get("img")
+	Dim lang As String=params.Get("lang")
 	Dim engine As String=params.Get("engine")
 	Dim appid As String=params.Get("appid")
 	Dim key As String=params.Get("key")
-    Log(base64)
 	If base64.Trim="" Then
 		resp.SendError(500,"empty data")
 		Return
@@ -42,16 +42,14 @@ Sub Handle(req As ServletRequest, resp As ServletResponse)
 	resp.CharacterEncoding="UTF-8"
 	resp.ContentType="application/json"
 	If engine = "youdao" Then
-		youdao(base64,appid,key,resp)
+		youdao(base64,lang,appid,key,resp)
 	else if engine = "google" Then
-		google(base64,key,resp)
-	End If
-	
+		google(base64,lang,key,resp)
+	End If	
 	StartMessageLoop
 End Sub
 
-Sub youdao(base64 As String,appid As String,key As String, resp As ServletResponse)
-	Dim lang As String="auto"
+Sub youdao(base64 As String,lang As String,appid As String,key As String, resp As ServletResponse)
 	Dim sign As String
 	Dim results As List
 	results.Initialize
@@ -132,9 +130,170 @@ Sub youdao(base64 As String,appid As String,key As String, resp As ServletRespon
 	StopMessageLoop
 End Sub
 
-Sub google(base64 As String,key As String, resp As ServletResponse)
-	resp.Write("done")
+Sub google(base64 As String,lang As String,key As String, resp As ServletResponse)
+	Dim detectionType As String="DOCUMENT_TEXT_DETECTION"
+	Dim boxes As List
+	boxes.Initialize
+	Dim resultMap As Map
+	resultMap.Initialize
+	Dim job As HttpJob
+	job.Initialize("",Me)
+	Dim requests As List
+	requests.Initialize
+	Dim body As Map
+	body.Initialize
+	body.Put("requests",requests)
+	Dim request As Map
+	request.Initialize
+	Dim imageMap As Map
+	imageMap.Initialize
+	imageMap.Put("content",base64)
+	Dim features As List
+	features.Initialize
+	Dim feature As Map
+	feature.Initialize
+	feature.Put("type",detectionType)
+	features.Add(feature)
+	request.Put("image",imageMap)
+	request.Put("features",features)
+	If lang.StartsWith("auto")=False Then
+		Dim hints As List
+		hints.Initialize
+		hints.Add(lang)
+		Dim context As Map
+		context.Initialize
+		context.Put("languageHints",hints)
+		request.Put("imageContext",context)
+	End If
+	requests.Add(request)
+	Dim jsonG As JSONGenerator
+	jsonG.Initialize(body)
+	job.PostString("https://vision.googleapis.com/v1/images:annotate?key="&key,jsonG.ToString)
+	'job.GetRequest.SetHeader("Authorization","Bearer "&key)
+	job.GetRequest.SetContentType("application/json; charset=utf-8")
+	wait for (job) JobDone(job As HttpJob)
+	If job.Success Then
+		Try
+			'Log(job.GetString)
+			'File.WriteString(File.DirApp,"out.json",job.GetString)
+			Dim responses As List
+			Dim json As JSONParser
+			json.Initialize(job.GetString)
+			responses=json.NextObject.Get("responses")
+			Dim response As Map=responses.Get(0)
+			Dim fullTextAnnotation As Map=response.Get("fullTextAnnotation")
+			Dim pages As List=fullTextAnnotation.Get("pages")
+			For Each page As Map In pages
+				Dim blocks As List = page.Get("blocks")
+				Log(blocks.Size&" blocks")
+				
+				For Each block As Map In blocks
+					Dim paragraphs As List=block.Get("paragraphs")
+					Log(paragraphs.Size&" paras")
+					For Each paragraph As Map In paragraphs
+						boxes.Add(Paragraph2Box(paragraph))
+					Next
+				Next
+			Next
+		Catch
+			Log(LastException)
+		End Try
+	End If
+	RemoveOverlapped(boxes)
+	Dim results As List
+	results.Initialize
+	For Each box As Map In boxes
+		results.Add(Utils.Box2OCRResult(box))
+	Next
+	resp.Write(Utils.OCRResults2JSON(results))
 	StopMessageLoop
 End Sub
 
+Sub Paragraph2Box(paragraph As Map) As Map
+	Dim box As Map
+	box.Initialize
+	Dim boundingBox As Map=paragraph.Get("boundingBox")
+	Dim vertices As List=boundingBox.Get("vertices")
+	Dim minX,maxX,minY,maxY As Int
+	Dim index As Int=0
+	For Each point As Map In vertices
+		Dim x As Int=point.Get("x")
+		Dim y As Int=point.Get("y")
+		If index=0 Then
+			minX=x
+			minY=y
+		Else
+			minX=Min(minX,x)
+			minY=Min(minY,y)
+		End If
+		maxX=Max(x,maxX)
+		maxY=Max(y,maxY)
+		index=index+1
+	Next
+	Dim boxGeometry As Map
+	boxGeometry.Initialize
+	boxGeometry.Put("X",minX)
+	boxGeometry.Put("Y",minY)
+	boxGeometry.Put("width",maxX-minX)
+	boxGeometry.Put("height",maxY-minY)
+	box.Put("geometry",boxGeometry)
+	
+	Dim sb As StringBuilder
+	sb.Initialize
+	Dim words As List=paragraph.Get("words")
+	For Each word As Map In words
+		Dim HasSpace As Boolean=True
+		If word.ContainsKey("property") Then
+			Dim property As Map=word.Get("property")
+			Dim detectedLanguages As List=property.Get("detectedLanguages")
+			For Each language As Map In detectedLanguages
+				Dim langcode As String=language.Get("languageCode")
+				If langcode.StartsWith("zh") Or langcode.StartsWith("ja") Then
+					HasSpace=False
+				End If
+			Next
+		End If
+		Dim symbols As List=word.Get("symbols")
+		For Each symbol As Map In symbols
+			sb.Append(symbol.Get("text"))
+		Next
+		If HasSpace Then
+			sb.Append(" ")
+		End If
+	Next
+	box.Put("text",sb.ToString.Trim)
+	Return box
+End Sub
 
+Sub RemoveOverlapped(boxes As List)
+	Dim new As List
+	new.Initialize
+	For i=0 To boxes.Size-1
+		Dim shouldRemove As Boolean=False
+		Dim box1 As Map=boxes.Get(i)
+		Dim geometry1 As Map
+		geometry1=box1.Get("geometry")
+		For j=0 To boxes.Size-1
+			Dim box2 As Map=boxes.Get(j)
+			Dim geometry2 As Map
+			geometry2=box2.Get("geometry")
+			If Utils.OverlappingPercent(geometry1,geometry2)>0.5 Then
+				If GetArea(geometry1)<GetArea(geometry2) Then
+					shouldRemove=True
+				End If
+			End If
+		Next
+		If shouldRemove=False Then
+			new.Add(box1)
+		End If
+	Next
+	boxes.Clear
+	boxes.Addall(new)
+End Sub
+
+Sub GetArea(boxGeometry As Map) As Int
+	Dim width,height As Int
+	width=boxGeometry.Get("width")
+	height=boxGeometry.Get("height")
+	Return width*height
+End Sub

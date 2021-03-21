@@ -22,6 +22,6 @@ ModuleClosedNodes4=
 ModuleClosedNodes5=
 ModuleClosedNodes6=
 ModuleClosedNodes7=
-NavigationStack=Utils,OCRResult2Map,4,6,Utils,Process_Globals,4,0,Utils,OCRResults2JSON,9,6,OCR,youdao,104,1,OCRResult,getRect,36,6,OCRVertices,Initialize,12,0,Main,AppStart,38,6,CacheFilter,Filter,16,0,Translate,Handle,77,0,OCR,Handle,30,6
+NavigationStack=Utils,theSmallerOne,148,0,Utils,Rect2Box,31,6,OCRResult,Class_Globals,0,0,OCR,Paragraph2Box,201,0,Utils,OCRResult2Map,31,0,Utils,Geometry2Rect,36,6,Utils,Box2OCRResult,33,6,OCR,google,127,6,OCR,youdao,126,0,OCR,Handle,42,6
 SelectedBuild=0
 VisibleModules=2,6,1,3,4,7,5

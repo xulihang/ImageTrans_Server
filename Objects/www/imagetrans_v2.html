@@ -93,6 +93,7 @@
 		
         status.innerText="Loading..."
 		var tgtContainer = document.getElementById("tgtContainer");
+		var overlayContainer = document.getElementById("overlay");
 		clearElements(tgtContainer,"img");
 		clearElements(overlayContainer,"div");
 				
@@ -104,11 +105,13 @@
 		
 		var appid=document.getElementById("appid").value;
 		var key=document.getElementById("key").value;
+		var engine=document.getElementById("ocrselect").value;
 		var ajaxObj = new XMLHttpRequest();
 		var timestamp = new Date().toString();
 		const params = {
 			"img": base64_data,
-			"engine": "youdao",
+			"engine": engine,
+			"lang": "auto",
 			"key": key,
 			"appid": appid
 		};
@@ -281,14 +284,14 @@
 			<div id="settings" class="tabcontent">
 				<div class="ocrselect">
 				    OCR Engline:
-					<select size="1" id="ocrselect" onchange="ocrChanged(this.value)">
+					<select size="1" id="ocrselect">
 					    <option value="google">Google</option>					
 					    <option value="youdao">Youdao</option>
 				    </select>
 				</div>
 				<div class="mtselect">
 				    Machine Translation Engline:
-					<select size="1" id="mtselect" onchange="mtChanged(this.value)">
+					<select size="1" id="mtselect">
 					    <option value="google">Google</option>					
 					    <option value="youdao">Youdao</option>
 				    </select>					
