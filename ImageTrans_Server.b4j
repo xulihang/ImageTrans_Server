@@ -1,20 +1,25 @@
 ﻿AppType=StandardJava
 Build1=Default,b4j.example
 Group=Default Group
-Library1=jcore
-Library2=jserver
-Library3=jshell
-Library4=byteconverter
-Library5=encryption
-Library6=jstringutils
-Library7=json
-Module1=Hello
-Module2=Translate
-Module3=CacheFilter
+Library1=byteconverter
+Library2=encryption
+Library3=jcore
+Library4=jserver
+Library5=jshell
+Library6=json
+Library7=jstringutils
+Library8=jokhttputils2
+Module1=CacheFilter
+Module2=Hello
+Module3=OCR
+Module4=OCRResult
+Module5=OCRVertices
+Module6=Translate
+Module7=Utils
 NumberOfFiles=0
-NumberOfLibraries=7
-NumberOfModules=3
-Version=7.8
+NumberOfLibraries=8
+NumberOfModules=7
+Version=8.9
 @EndOfDesignText@
 'Non-UI application (console / server application)
 #Region Project Attributes 
@@ -48,9 +53,12 @@ Sub AppStart (Args() As String)
 	If File.Exists(tempDir,"")=False Then
 		File.MakeDir(tempDir,"")
 	End If
+	'Dim result As OCRResult
+	'result.Initialize(Utils.CreateVertices(Utils.CreateVertice(1,1),Utils.CreateVertice(1,1),Utils.CreateVertice(3,4),Utils.CreateVertice(1,1)),"")
 	srvr.Initialize("srvr")
 	srvr.AddHandler("/hello","Hello",False)
 	srvr.AddHandler("/translate","Translate",False)
+	srvr.AddHandler("/ocr","OCR",False)
 	srvr.AddFilter("/*", "CacheFilter", False)
 	srvr.Port=port
 	srvr.Start
