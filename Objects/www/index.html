@@ -5,6 +5,7 @@
 	<title>ImageTrans Online</title>
 	<script type="text/javascript" src="tabs.js"></script>
 	<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+	<script type="text/javascript" src="spark-md5.min.js"></script>	
 	<link rel="stylesheet" href="css/user.css">
 	<link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/skeleton.css">
@@ -254,22 +255,41 @@
 			remote.style="";
 		}
 	}
-	
+		
 	function loadRemoteImg(){
+	    console.log("loading remote img")
+		var method=document.getElementById("methodselect").value;
+		console.log(method);
 		var url=document.getElementById("imgurl").value;
-		var canvas = document.createElement("canvas")  
-		ctx = canvas.getContext('2d')
-		var img = new Image();
-		img.crossOrigin ='Anonymous';
-		img.onload = function() {
-			canvas.height = img.height;
-			canvas.width = img.width;
-			ctx.drawImage(img,0,0);
-			var dataURL = canvas.toDataURL('image/jpeg');
-			appendSrcImg(dataURL);	
-			canvas = null;
-		};		
-		img.src = url;
+		
+		if (method=="remoteurl_server"){
+			var ajaxObj = new XMLHttpRequest();
+			ajaxObj.open('GET', 'image2base64?url='+url);
+			ajaxObj.send(null);
+			ajaxObj.onreadystatechange = function () {
+				if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
+				    var jsonobject = JSON.parse(ajaxObj.responseText);
+					appendSrcImg("data:image/jpeg;base64,"+jsonobject["data"]);	
+				}
+			}
+			ajaxObj.onerror = function () {
+				console.log("error");
+			}
+		} else{
+			var canvas = document.createElement("canvas")  
+			ctx = canvas.getContext('2d')
+			var img = new Image();
+			img.crossOrigin ='anonymous';
+			img.onload = function() {
+				canvas.height = img.height;
+				canvas.width = img.width;
+				ctx.drawImage(img,0,0);
+				var dataURL = canvas.toDataURL('image/jpeg');
+				appendSrcImg(dataURL);	
+				canvas = null;
+			};		
+			img.src = url;
+		}		
 	}
 	
 	function langSelected(isSource,value){
@@ -309,6 +329,7 @@
 			<div id="uploader" class="tabcontent">
 				<select size="1" id="methodselect" onchange="methodChanged(this.value)">
 					<option value="localfile">Local File</option>					
+					<option value="remoteurl_server">Remote URL Server</option>	
 					<option value="remoteurl">Remote URL</option>
 				</select>			
 				<span id="local">
