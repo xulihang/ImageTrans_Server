@@ -4,22 +4,82 @@
 	<meta charset="utf-8" />
 	<title>ImageTrans Online</title>
 	<script type="text/javascript" src="tabs.js"></script>
+	<script type="text/javascript" src="spark-md5.min.js"></script>	
 	<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 	<link rel="stylesheet" href="css/user.css">
 	<link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/skeleton.css">
 	<link rel="stylesheet" href="css/tabs.css">
 	<style type="text/css">
-		.img-container{
-		    position:relative;
-		}
-		
-		.textbox{
-		    position:absolute;
-			background-color: white;
-		}
+		.ta {width: 300px;
+		height: 350px;}
 	</style>
 	<script type="text/javascript">
+	function update(){
+		var ta=document.getElementById("params");
+		var params=JSON.parse(ta.value);
+		var colorType=getSelectedRadio("colortype");
+		var imageType=getSelectedRadio("imagetype");
+		var fastmode=true;
+		var fastmodeChk=document.getElementById("fastmodechk");
+		var jachk=document.getElementById("jachk");
+		if (jachk.checked==true){
+			fastmodeChk.checked=false;
+		}
+		if (colorType=="blackwhite"){
+			params["otsu_enabled"]=false;
+		}else{
+			params["otsu_enabled"]=true;
+		}
+		if (fastmodeChk.checked==true){
+			params["ocrengine"]="google";
+			params["mtengine"]="colorfulclouds";
+			params["detection_method"]="OCR";
+			params["precision_mode"]=false;
+		}
+		else{
+			if (imageType=="normal"){
+				params["detection_method"]="heuristic";
+				if (jachk.checked==true){
+					params["source"]="ja";
+					params["ocrengine"]="tesseract";
+					params["ocrlang"]="jpn_vert";
+					params["remove_space"]=true;
+					params["stripfurigana"]=true;
+					params["maximumHeight"]=55;
+					params["overlapped_height_percent"]=85;
+					params["textLocalizationProcess"]=["纵向合并","横向合并","过滤过小项","去除内部区域","拓展区域"];
+				}
+				else{
+					params["ocrengine"]="baidu_accurate";
+					params["ocrlang"]="auto";
+				}
+			}else if (imageType=="print"){
+				params["detection_method"]="OCR";
+				params["ocrengine"]="tesseract";
+				params["ocrlang"]="chi_sim+eng";
+			}else if (imageType=="complex"){
+				params["detection_method"]="OCR";
+				params["ocrengine"]="google";
+				params["ocrlang"]="auto";
+			}
+		}
+		var result = JSON.stringify(params,null,4);
+		ta.value=result;
+		//alert(getSelectedRadio("colortype"));
+		//alert(getSelectedRadio("imagetype"));
+	}
+
+	function getSelectedRadio(name){
+		var radios=document.getElementsByName(name)
+		for (i = 0; i < radios.length; i++) { 
+			var r=radios[i];
+			if (r.checked==true){
+				return r.value;
+			}
+		}
+	}
+	
 	function onFileChosen(event){
 		showLocalImage(event);
 	}
@@ -51,7 +111,7 @@
 			clearElements(tgtContainer,"img");
 			img = document.createElement("img");
 			img.src = data;
-			img.style = "width:100%"
+			img.style = "max-width:100%"
 			srcContainer.append(img);
 		}
 
@@ -67,6 +127,7 @@
 	
 	
 	function uploadImg() {
+		updateLangsParams();
 	    var status=document.getElementById("status");
 		
 		if (status.innerText!=""){
@@ -74,7 +135,18 @@
 		    return
 		}
 		
-
+	    var detectonly=document.getElementById("detectonly");
+		var useprevious=document.getElementById("useprevious");
+		if (detectonly.checked){
+			detectonly="true";
+		}else{
+			detectonly="false";
+		}
+		if (useprevious.checked){
+			useprevious="true";
+		}else{
+			useprevious="false";
+		}
 		var srcContainer = document.getElementById("srcContainer");
 		if (srcContainer.getElementsByTagName("img").length==0){
 		    alert("Please load an image first.");
@@ -93,144 +165,46 @@
 		
         status.innerText="Loading..."
 		var tgtContainer = document.getElementById("tgtContainer");
-		var overlayContainer = document.getElementById("overlay");
 		clearElements(tgtContainer,"img");
-		clearElements(overlayContainer,"div");
-				
+		
+		
 		var srcContainer = document.getElementById("srcContainer");
 		
 		var img = srcContainer.getElementsByTagName("img")[0];
-		var data = img.src;		
-        var base64_data = data.substring(data.indexOf(",")+1,data.length);
-		
-		var appid=document.getElementById("appid").value;
-		var key=document.getElementById("key").value;
-		if (key==""){
-		    alert("Key is empty.");
-		}
-		var engine=document.getElementById("ocrselect").value;
+		var data = img.src;
+		var ta = document.getElementById("params");
 		var ajaxObj = new XMLHttpRequest();
-		const params = {
-			"img": base64_data,
-			"engine": engine,
-			"lang": "auto",
-			"key": key,
-			"appid": appid
+
+		const payload = {
+			"returntype": "base64",
+			"data": data,
+			"filename": filename,
+			"useprevious": useprevious,
+			"detectonly": detectonly,
+			"config": ta.value
 		};
-		console.log(params);
-		
-		ajaxObj.open('POST', 'ocr');
+		ajaxObj.open('POST', 'translate');
 		ajaxObj.setRequestHeader('Content-Type', 'application/json');
-		ajaxObj.send(JSON.stringify(params));
-		ajaxObj.onreadystatechange = function () {
+		// send rquest with JSON payload
+		ajaxObj.send(JSON.stringify(payload));	
+        ajaxObj.onreadystatechange = function () {
 			status.innerText="";
-			if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
+            if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
 				try {
-					var jsonobject = JSON.parse(ajaxObj.responseText);
-					console.log(jsonobject);
+					var jsonobject = JSON.parse(ajaxObj.responseText);				
 					img = document.createElement("img");
-					img.src = data;
-					img.style = "width:100%";
+					img.src = "data:image/jpeg;base64,"+jsonobject["data"];
+					img.style = "max-width:100%";
 					tgtContainer.append(img);
-					overlayTextBoxes(jsonobject["boxes"],img)
 				} catch (error) {
 					alert(ajaxObj.responseText);
 				}			
-			}
-		}
+            }
+        }
 		ajaxObj.onerror = function () {
-			console.log("error");
-		}
+			window.open("translate");
+        }
 	}		
-	
-	function overlayTextBoxes(boxes,img,container){
-	    var imgHeight=img.naturalHeight;
-		var imgWidth=img.naturalWidth;
-		var overlayContainer = document.getElementById("overlay");
-		var fontsize = document.getElementById("fontsize").value;
-		var removeSpaces = document.getElementById("removeSpaces").checked;
-		var removeLineBreaks = document.getElementById("removeLineBreaks").checked;
-	    for (i=0;i<boxes.length;i++){
-		    var box = boxes[i];
-			boxdiv = document.createElement("div");
-			boxdiv.className="textbox";		
-			var text = box["text"];
-			console.log(text);
-			if (removeSpaces==true){
-			    text=text.replace(/ /g,"");
-			}
-			if (removeLineBreaks==true){
-			    text=text.replace(/\n/g,"");
-				console.log("remove breaks");
-			}
-			console.log(text);
-            boxdiv.innerText=text;			
-			boxdiv.style.left = box["x0"]/imgWidth*100 + "%";
-			boxdiv.style.top = box["y0"]/imgHeight*100 + "%";
-			boxdiv.style.width = (box["x1"]-box["x0"])/imgWidth*100 + "%";
-			boxdiv.style.minHeight = (box["y2"]-box["y0"])/imgHeight*100 + "%";
-			boxdiv.style.height = "fit-content";
-			boxdiv.style.fontSize = fontsize;
-			boxdiv.contentEditable="true";
-		    overlayContainer.append(boxdiv);
-		}
-	}
-	
-	function translateBoxes(){
-	    var overlayContainer = document.getElementById("overlay");
-		var boxes = overlayContainer.getElementsByClassName("textbox");
-		if (boxes.length==0){
-		    alert("No box to translate.");
-			return
-		}
-		var textList=[];
-		for (i=0;i<boxes.length;i++){
-		    var box = boxes[i];
-			textList.push(box.innerText);
-		}
-		var appid=document.getElementById("appid").value;
-		var key=document.getElementById("key").value;
-		if (key==""){
-		    alert("Key is empty.");
-		}
-		var engine=document.getElementById("ocrselect").value;
-		var src=document.getElementById("srcLang").value;
-		var tgt=document.getElementById("tgtLang").value;
-		var ajaxObj = new XMLHttpRequest();
-		const params = {
-			"text": textList,
-			"engine": engine,
-			"src": src,
-			"tgt": tgt,
-			"key": key,
-			"appid": appid
-		};
-		ajaxObj.open('POST', 'mt');
-		ajaxObj.setRequestHeader('Content-Type', 'application/json');
-		ajaxObj.send(JSON.stringify(params));
-		ajaxObj.onreadystatechange = function () {
-			status.innerText="";
-			if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
-				try {
-					var jsonobject = JSON.parse(ajaxObj.responseText);
-					console.log(jsonobject);
-					fillTranslations(boxes,jsonobject)
-				} catch (error) {
-					alert(ajaxObj.responseText);
-				}			
-			}
-		}
-		ajaxObj.onerror = function () {
-			console.log("error");
-		}
-	}
-	
-	function fillTranslations(boxes,translations){
-		for (i=0;i<boxes.length;i++){
-		    var box = boxes[i];
-			box.innerText=translations[i];
-		}
-	}
 	
 	function methodChanged(value){
 		var local=document.getElementById("local");
@@ -272,8 +246,18 @@
 		    langInput.disabled=false;
 		}else{
 		    langInput.disabled=true;
-			langInput.value=value;				
+			langInput.value=value;	
+			updateLangsParams();			
 		}
+	}
+	
+	function updateLangsParams(){
+	    var ta=document.getElementById("params");
+	    var params=JSON.parse(ta.value);
+		params["source"]=document.getElementById("srcLang").value;
+		params["target"]=document.getElementById("tgtLang").value;
+        var result = JSON.stringify(params,null,4);
+		ta.value=result;		
 	}
 	
 	function fileOverSize(base64){
@@ -293,7 +277,8 @@
 		<div class="row">
 			<div class="tab" style="display:flex;overflow-x:auto">
 				<button class="tablinks" onclick="switchTab(event, 'uploader')">Upload Helper</button>
-				<button class="tablinks" onclick="switchTab(event, 'settings')">Settings</button>
+				<button class="tablinks" onclick="switchTab(event, 'paramshelper')">Params Helper</button>
+				<button class="tablinks" onclick="switchTab(event, 'fullparams')">Full Params</button>
 			</div>	
 			<div id="uploader" class="tabcontent">
 				<select size="1" id="methodselect" onchange="methodChanged(this.value)">
@@ -346,45 +331,92 @@
 						<input type="text" id="tgtLang" value="en" disabled />
 					</div>
 				</div>
-				<button onclick="translateBoxes()">Translate</button>
-			</div>
 
-			<div id="settings" class="tabcontent">
-			    Remove spaces:<input type="checkbox" id="removeSpaces">
-				Remove line breaks:<input type="checkbox" id="removeLineBreaks" checked><br/>
-				Font size: <input type="text" id="fontsize" value="16px"/>
-				<div class="ocrselect">
-				    OCR Engline:
-					<select size="1" id="ocrselect">
-					    <option value="google">Google</option>					
-					    <option value="youdao">Youdao</option>
-				    </select>
+			</div>
+			<div id="paramshelper" class="tabcontent">
+				Detect Only: <input type="checkbox" id="detectonly" name="detectonly"><br/>
+				 Use Previous Data: <input type="checkbox" id="useprevious" name="useprevious" checked>
+				<p>Adjust parameters to adapt to specific types of images. Remember to click Update Params button.</p>
+				<button type="button" onclick="update()">Update Params</button>
+				<p>FastMode: <input type="checkbox" name="fastmode" id="fastmodechk" checked> (limited language support with 彩云小译)</p>
+				<div id="colortyperadios">
+				<p>Color Type:</p>
+				<p><input type="radio" name="colortype" value="blackwhite">Black/White</p>
+				<p><input type="radio" name="colortype" value="color" checked>Color</p>
 				</div>
-				<div class="mtselect">
-				    Machine Translation Engline:
-					<select size="1" id="mtselect">
-					    <option value="google">Google</option>					
-					    <option value="youdao">Youdao</option>
-				    </select>					
+
+				<div id="imagetyperadio">
+				<p>Image Type:</p>
+				<p><input type="radio" name="imagetype" value="normal" checked>Normal (e.g. comic)</p>
+				<p><input type="radio" name="imagetype" value="print">Print</p>
+				<p><input type="radio" name="imagetype" value="complex">Complex images</p>
 				</div>
-				Please fill your own api keys: <br/>
-				Key: <input type="text" id="key" value=""/> <br/>
-				App ID (required by youdao): <input type="text" id="appid" value=""/> 
-				
+				<p>Source Language:</p>
+				<p>Japanese in Manga: <input type="checkbox" name="japanese" id="jachk"></p>
+			</div>
+			<div id="fullparams" class="tabcontent">				
+				<textarea id="params" class="ta" name="config">
+{
+	"resize": true,
+	"vertical_merge_for_OCR": true,
+	"horizontal_merge_for_OCR": true,
+	"auto_clean": true,
+	"blur": false,
+	"otsu_enabled": true,
+	"mtengine": "tencent",
+	"remove_space": false,
+	"detection_method": "OCR",
+	"minimumHeight": 3,
+	"addBorder": false,
+	"reorder": false,
+	"stripfurigana": false,
+	"threshold": 200,
+	"use_puretext": false,
+	"source": "auto",
+	"minimumHSpan": 15,
+	"target": "en",
+	"ocrlang": "auto",
+	"mt_interval": 200,
+	"precision_mode": true,
+	"ocr_interval": 200,
+	"maximumHeight": 100,
+	"chinese_punctuation": false,
+	"ocrengine": "google",
+	"autoThreshold": true,
+	"minimumVSpan": 15,
+	"overlapped_width_percent": 50,	
+	"overlapped_height_percent": 70,
+	"dilation": 2,
+	"expanding_pix": 5,
+	"fontStyles": [
+			{
+				"b4jfont": "System",
+				"line-height": 1.25,
+				"bold": false,
+				"fontname": "Arial",
+				"italic": false,
+				"shadowRadius": 2,
+				"bgcolor": "255,255,255",
+				"size": 15,
+				"name": "Text",
+				"fontcolor": "0,0,0",
+				"alignment": 1,
+				"wrap": true,
+				"shadowColor": "255,255,255,1",
+				"direction": 0
+			}
+		]	
+}</textarea> 
 			</div>
 		</div>
 		<div class="row">			
-		    <div>Target:</div>
-			<div id="tgtContainer" class="img-container">
-			<div id="overlay" style="position:absolute;left:0;top:0;height:100%;width: 100%;">
-			</div>
+			<div id="tgtContainer"><div>Target:</div>
 			<div id="status"></div>
 			</div>
 					
 		</div>
 		<div class="row">	
-		    <div>Source:</div>
-			<div id="srcContainer" class="img-container">
+			<div id="srcContainer"><div>Source:</div>
 			</div>
 		</div>
 	</div>
