@@ -225,6 +225,7 @@
 		var url=document.getElementById("imgurl").value;
 		
 		if (method=="remoteurl_server"){
+		    alert("Downloading the image with server, please wait.");
 			var ajaxObj = new XMLHttpRequest();
 			ajaxObj.open('GET', 'image2base64?url='+url);
 			ajaxObj.send(null);

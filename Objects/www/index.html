@@ -159,12 +159,12 @@
 			boxdiv.className="textbox";		
 			var text = box["text"];
 			console.log(text);
+			if (removeLineBreaks==true){
+			    text=text.replace(/\n/g," ");
+				console.log("remove breaks");
+			}
 			if (removeSpaces==true){
 			    text=text.replace(/ /g,"");
-			}
-			if (removeLineBreaks==true){
-			    text=text.replace(/\n/g,"");
-				console.log("remove breaks");
 			}
 			console.log(text);
             boxdiv.innerText=text;			
@@ -263,6 +263,7 @@
 		var url=document.getElementById("imgurl").value;
 		
 		if (method=="remoteurl_server"){
+		    alert("Downloading the image with server, please wait.");
 			var ajaxObj = new XMLHttpRequest();
 			ajaxObj.open('GET', 'image2base64?url='+url);
 			ajaxObj.send(null);
