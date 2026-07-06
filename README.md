@@ -2,6 +2,9 @@
 
 The server app which brings ImageTrans's functionalities to the cloud. 
 
+> [!NOTE]
+> This project is no longer actively maintained. Please use <https://github.com/xulihang/image-translation-server> instead.
+
 # Running under Linux
 
 1. Compile opencv with java and put the libopencv450_java.so to the system's lib path.
